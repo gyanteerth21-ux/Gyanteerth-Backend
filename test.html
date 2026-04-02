@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Google Login Test</title>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+</head>
+
+<body>
+
+<h2>Login with Google</h2>
+
+<div id="g_id_onload"
+     data-client_id="50391096209-j049mjc9nfqv7rncaldf4i4j8hjh285p.apps.googleusercontent.com"
+     data-callback="handleCredentialResponse"
+     data-auto_prompt="false">
+</div>
+
+<div class="g_id_signin"
+     data-type="standard"
+     data-size="large"
+     data-theme="outline"
+     data-text="continue_with"
+     data-shape="rectangular">
+</div>
+
+
+<script>
+
+function handleCredentialResponse(response){
+
+    console.log("Google ID Token:", response.credential);
+
+    fetch("http://localhost:8000/gyantreeth/v1/auth_checkpoint/google-signup",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            id_token: response.credential
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("API Response:", data);
+        alert(JSON.stringify(data));
+    })
+    .catch(err => console.error(err))
+
+}
+
+</script>
+
+</body>
+</html>

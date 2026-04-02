@@ -1,0 +1,71 @@
+from datetime import date
+from pydantic import ValidationError
+from fastapi import BackgroundTasks, FastAPI,HTTPException,Request,APIRouter,Depends, UploadFile, File,Form,Path
+from h11 import Data
+from Database.DB import get_db
+from sqlalchemy.orm import Session
+from services.AuthService import user_Authorization
+from services.UserService import UserService
+from schemas.user import UpdateUserProfileRequest,EnrollCourseRequest,EnrollCourseResponse
+from schemas.user import GenderEnum
+from schemas.user import UserProfile_response,update_profile_response
+from typing import Annotated
+
+router_user = APIRouter()
+
+@router_user.get("/profile",response_model =UserProfile_response,summary="Get User Profile",
+    description="Retrieves the profile information of the authenticated user.")
+async def get_profile(db: Session = Depends(get_db),token: object = Depends(user_Authorization())):
+    return await UserService().get_user_profile(token, db)
+
+@router_user.put(
+    "/update_profile",
+    response_model=update_profile_response,
+    summary="Update User Profile",
+    description="Updates the profile information of the authenticated user."
+)
+async def update_profile(
+    user_name: Annotated[str, Form(..., example="ArulJayaraj")],
+    user_number: Annotated[int, Form(..., example=1234567890)],
+    user_dob: Annotated[date, Form(..., example="1990-01-01")],
+    user_gender: Annotated[GenderEnum, Form(..., example="male")],
+    user_city: Annotated[str, Form(..., example="New York")],
+    user_state: Annotated[str, Form(..., example="NY")],
+    user_pic: UploadFile | None = File(None),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db),
+    token: object = Depends(user_Authorization())
+):
+    try:
+        Data = UpdateUserProfileRequest(
+            user_name=user_name,
+            user_number=user_number,
+            user_dob=user_dob,
+            user_city=user_city,
+            user_state=user_state
+        )
+
+        return await UserService().update_user_profile(
+            Data, user_gender, background_tasks, user_pic, token, db
+        )
+
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+@router_user.post("/enroll_course", response_model=EnrollCourseResponse)
+async def enroll_course_api(request: EnrollCourseRequest, db: Session = Depends(get_db), token: dict = Depends(user_Authorization())):
+
+    try:
+        result = await UserService().enroll_course(
+            course_id=request.course_id,
+            db=db,
+            token=token
+        )
+        return result
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+@router_user.get("/enrolled_courses", summary="Get Enrolled Courses", description="Fetches all courses a user is enrolled in.")
+async def enrolled_courses_detail(db:Session = Depends(get_db),token: object = Depends(user_Authorization())):
+    return await UserService().enrolled_course(db,token)

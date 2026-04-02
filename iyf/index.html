@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>IYF Cinematic</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@300;400;600&family=Montserrat:wght@200;300;400;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --red:#c0392b; --gold:#c9a84c; --gold-light:#e8c87a; }
+
+    body {
+      background:#000; color:#fff;
+      font-family:'Bebas Neue',sans-serif;
+      display:flex; justify-content:center; align-items:center;
+      height:100vh; overflow:hidden;
+    }
+    body::before {
+      content:""; position:fixed; inset:0;
+      background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,0.9) 100%);
+      pointer-events:none; z-index:10;
+    }
+    body::after {
+      content:""; position:fixed; inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events:none; z-index:11; opacity:0.35;
+      animation:grain 0.12s steps(1) infinite;
+    }
+    @keyframes grain {
+      0%{transform:translate(0,0)} 20%{transform:translate(-2px,1px)}
+      40%{transform:translate(1px,-2px)} 60%{transform:translate(2px,1px)}
+      80%{transform:translate(-1px,2px)} 100%{transform:translate(1px,-1px)}
+    }
+
+    #container { display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:5; }
+    .day {
+      font-size:clamp(22px,5.5vw,46px); letter-spacing:0.18em; opacity:0;
+      transform:translateX(-40px);
+      animation:slideIn 0.45s cubic-bezier(0.22,1,0.36,1) forwards;
+      position:relative; color:#e8e8e8;
+      text-shadow:0 0 30px rgba(255,255,255,0.08); white-space:nowrap; transition:color 0.4s ease;
+    }
+    @keyframes slideIn { to{opacity:1;transform:translateX(0)} }
+    .strike { color:#3a3a3a !important; text-shadow:none; }
+    .strike::after {
+      content:""; position:absolute; left:-4%; top:50%; width:0; height:2px;
+      background:linear-gradient(90deg,#cc0000,#ff2222 60%,transparent);
+      transform:translateY(-50%) rotate(-4deg);
+      animation:drawLine 0.45s cubic-bezier(0.4,0,0.2,1) forwards;
+      box-shadow:0 0 6px rgba(200,0,0,0.7);
+    }
+    @keyframes drawLine { to{width:108%} }
+    .sunday-pulse {
+      animation:sundayReveal 1.4s cubic-bezier(0.16,1,0.3,1) forwards !important;
+      color:#fff !important;
+      text-shadow:0 0 20px rgba(255,255,255,0.9),0 0 60px rgba(255,80,80,0.5),0 0 120px rgba(255,30,30,0.25) !important;
+    }
+    @keyframes sundayReveal {
+      0%{transform:scale(1);letter-spacing:0.18em} 30%{transform:scale(1.35);letter-spacing:0.35em}
+      60%{transform:scale(1.28)} 100%{transform:scale(1.22);letter-spacing:0.3em}
+    }
+
+    #iyf-wrapper { position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;opacity:0;pointer-events:none;z-index:6; }
+    #iyf-wrapper.show { animation:wrapperIn 0.6s ease forwards; }
+    @keyframes wrapperIn { to{opacity:1} }
+    #flash { position:fixed;inset:0;background:white;opacity:0;z-index:20;pointer-events:none; }
+    #flash.pop { animation:flashPop 0.5s ease forwards; }
+    @keyframes flashPop { 0%{opacity:0.9} 100%{opacity:0} }
+    #iyf {
+      font-size:clamp(70px,18vw,180px); letter-spacing:0.22em; color:transparent;
+      background:linear-gradient(135deg,#fff 0%,#c8c8c8 50%,#fff 100%);
+      -webkit-background-clip:text; background-clip:text;
+      transform:scale(0.6); opacity:0; filter:drop-shadow(0 0 30px rgba(255,255,255,0.5));
+    }
+    #iyf.animate { animation:iyfZoom 1.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+    @keyframes iyfZoom {
+      0%{transform:scale(0.6);opacity:0;letter-spacing:0.1em;filter:blur(12px)}
+      40%{opacity:1;filter:blur(0) drop-shadow(0 0 40px rgba(255,255,255,0.8))}
+      70%{transform:scale(1.1);letter-spacing:0.25em}
+      100%{transform:scale(1);opacity:1;letter-spacing:0.22em;filter:drop-shadow(0 0 18px rgba(255,255,255,0.35))}
+    }
+    #iyf-sub { font-family:'Montserrat',sans-serif;font-weight:300;font-size:clamp(10px,2vw,18px);letter-spacing:0.55em;color:rgba(255,255,255,0);text-transform:uppercase;margin-top:10px; }
+    #iyf-sub.animate { animation:subFade 1s ease 0.7s forwards; }
+    @keyframes subFade { to{color:rgba(255,255,255,0.45)} }
+    .accent-line { width:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent);margin:8px auto; }
+    .accent-line.animate { animation:expandLine 0.8s ease 0.5s forwards; }
+    @keyframes expandLine { to{width:clamp(120px,25vw,280px)} }
+
+    #menu-screen { position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:7;opacity:0;pointer-events:none; }
+    #menu-screen.show { opacity:1;pointer-events:all; }
+    .menu-eyebrow { font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(9px,1.3vw,13px);letter-spacing:0.65em;color:rgba(255,255,255,0);text-transform:uppercase;margin-bottom:36px; }
+    .menu-eyebrow.show { animation:fadeUp 1s ease forwards; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(10px);color:rgba(255,255,255,0)} to{opacity:1;transform:translateY(0);color:rgba(255,255,255,0.3)} }
+    .menu-btn { position:relative;width:clamp(240px,40vw,440px);margin:8px 0;padding:0;background:none;border:none;cursor:pointer;outline:none;opacity:0;transform:translateY(28px); }
+    .menu-btn.show { animation:btnIn 0.65s cubic-bezier(0.16,1,0.3,1) forwards; }
+    @keyframes btnIn { to{opacity:1;transform:translateY(0)} }
+    .btn-inner { position:relative;display:flex;align-items:center;justify-content:space-between;padding:17px 26px;border:1px solid rgba(255,255,255,0.13);background:rgba(255,255,255,0.03);backdrop-filter:blur(6px);transition:border-color 0.35s,background 0.35s;overflow:hidden; }
+    .btn-inner::before { content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent,rgba(255,255,255,0.08),transparent);transform:translateX(-120%);transition:transform 0.55s; }
+    .btn-inner::after { content:"";position:absolute;bottom:0;left:0;width:0;height:2px;background:linear-gradient(90deg,var(--red),var(--gold));box-shadow:0 0 8px rgba(201,168,76,0.5);transition:width 0.4s cubic-bezier(0.4,0,0.2,1); }
+    .menu-btn:hover .btn-inner { border-color:rgba(255,255,255,0.32);background:rgba(255,255,255,0.07); }
+    .menu-btn:hover .btn-inner::before { transform:translateX(120%); }
+    .menu-btn:hover .btn-inner::after { width:100%; }
+    .menu-btn:active .btn-inner { background:rgba(255,255,255,0.14);transition:background 0.05s; }
+    .btn-index { font-family:'Cormorant Garamond',serif;font-size:clamp(10px,1.4vw,13px);font-weight:600;color:var(--gold);letter-spacing:0.08em;opacity:0.65;min-width:24px; }
+    .btn-label { flex:1;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:clamp(20px,3.8vw,34px);letter-spacing:0.32em;color:#ddd;transition:color 0.3s,letter-spacing 0.3s,text-shadow 0.3s; }
+    .menu-btn:hover .btn-label { color:#fff;letter-spacing:0.4em;text-shadow:0 0 22px rgba(255,255,255,0.45); }
+    .btn-arrow { font-size:14px;color:rgba(255,255,255,0.18);transition:color 0.3s,transform 0.3s; }
+    .menu-btn:hover .btn-arrow { color:var(--gold-light);transform:translateX(6px); }
+
+    #page-overlay {
+      position:fixed;inset:0;background:#000;z-index:50;
+      display:flex;flex-direction:column;justify-content:flex-start;align-items:center;
+      pointer-events:none;clip-path:inset(0 100% 0 0);
+      overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(201,168,76,0.3) transparent;
+    }
+    #page-overlay::-webkit-scrollbar{width:3px}
+    #page-overlay::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3);border-radius:2px}
+    #page-overlay.entering { pointer-events:all;animation:pageSlideIn 0.55s cubic-bezier(0.76,0,0.24,1) forwards; }
+    @keyframes pageSlideIn { to{clip-path:inset(0 0% 0 0)} }
+    #page-overlay.exiting { animation:pageSlideOut 0.45s cubic-bezier(0.76,0,0.24,1) forwards; }
+    @keyframes pageSlideOut { from{clip-path:inset(0 0% 0 0)} to{clip-path:inset(0 0% 0 100%)} }
+
+    .page-deco-line { width:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:10px 0; }
+    .page-deco-line.reveal { animation:lineGrow 0.7s ease 0.4s forwards; }
+    @keyframes lineGrow { to{width:clamp(100px,28vw,300px)} }
+
+    #page-title { font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,8vw,80px);letter-spacing:0.28em;color:transparent;background:linear-gradient(135deg,#fff,#999);-webkit-background-clip:text;background-clip:text;opacity:0;transform:translateY(18px);margin-top:28px; }
+    #page-title.reveal { animation:titleUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.25s forwards; }
+    @keyframes titleUp { to{opacity:1;transform:translateY(0)} }
+    #page-sub { font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(10px,1.6vw,14px);letter-spacing:0.5em;color:rgba(255,255,255,0);text-transform:uppercase;margin-top:6px; }
+    #page-sub.reveal { animation:subUp 1s ease 0.65s forwards; }
+    @keyframes subUp { to{color:rgba(255,255,255,0.38)} }
+
+    #open-block { display:flex;flex-direction:column;align-items:center;width:100%;padding:0 16px 120px; }
+    #date-badge { font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(10px,1.5vw,13px);letter-spacing:0.5em;color:rgba(201,168,76,0.7);text-transform:uppercase;margin-top:4px;opacity:0;transition:opacity 0.5s ease 0.8s; }
+    #attendance-form { width:clamp(280px,70vw,700px);margin-top:18px;opacity:0;transition:opacity 0.5s ease; }
+
+    #names-loading-state { display:flex;flex-direction:column;align-items:center;padding:30px 0;gap:14px; }
+    .spinner { width:32px;height:32px;border-radius:50%;border:2px solid rgba(201,168,76,0.15);border-top-color:rgba(201,168,76,0.7);animation:spin 0.8s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .loading-text { font-family:'Montserrat',sans-serif;font-weight:300;font-size:11px;letter-spacing:0.4em;color:rgba(255,255,255,0.25);text-transform:uppercase; }
+
+    #already-submitted-banner { display:none;flex-direction:column;align-items:center;padding:32px 24px;margin-bottom:20px;border:1px solid rgba(80,200,80,0.3);background:rgba(80,200,80,0.05);text-align:center; }
+    .submitted-icon { font-size:42px;color:rgba(80,200,80,0.85);margin-bottom:12px; }
+    .submitted-label { font-family:'Bebas Neue',sans-serif;font-size:clamp(20px,3.5vw,28px);letter-spacing:0.4em;color:rgba(80,200,80,0.9); }
+    .submitted-sub { font-family:'Montserrat',sans-serif;font-weight:300;font-size:clamp(9px,1.4vw,12px);letter-spacing:0.35em;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-top:10px;line-height:1.9; }
+
+    #meeting-toggle-block { margin-bottom:16px; }
+    .meeting-toggle-row { display:flex;align-items:center;gap:16px;padding:16px 18px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);cursor:pointer;transition:border-color 0.3s,background 0.3s;user-select:none; }
+    .meeting-toggle-row:hover { border-color:rgba(255,255,255,0.25);background:rgba(255,255,255,0.05); }
+    .meeting-toggle-row.active { border-color:rgba(80,200,80,0.45);background:rgba(80,200,80,0.05); }
+    .toggle-cb-wrap input[type="checkbox"] { display:none; }
+    .toggle-cb-box { width:46px;height:26px;border-radius:13px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);position:relative;transition:all 0.3s; }
+    .toggle-cb-inner { width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.4);position:absolute;top:2px;left:2px;transition:all 0.3s cubic-bezier(0.4,0,0.2,1); }
+    .meeting-toggle-row.active .toggle-cb-box { background:rgba(80,200,80,0.2);border-color:rgba(80,200,80,0.6); }
+    .meeting-toggle-row.active .toggle-cb-inner { left:24px;background:rgba(80,200,80,0.95); }
+    .toggle-label-group { display:flex;flex-direction:column;gap:3px; }
+    .toggle-main-label { font-family:'Bebas Neue',sans-serif;font-size:clamp(16px,2.5vw,22px);letter-spacing:0.3em;color:#e8e8e8; }
+    .toggle-sub-label { font-family:'Montserrat',sans-serif;font-weight:300;font-size:clamp(9px,1.3vw,11px);letter-spacing:0.3em;color:rgba(255,255,255,0.3);text-transform:uppercase;transition:color 0.3s; }
+    .meeting-toggle-row.active .toggle-sub-label { color:rgba(80,200,80,0.65); }
+
+    #not-happened-info { display:none;padding:14px 18px;margin-bottom:16px;border:1px solid rgba(192,57,43,0.3);background:rgba(192,57,43,0.05); }
+    #not-happened-info .info-text { font-family:'Montserrat',sans-serif;font-weight:300;font-size:clamp(9px,1.4vw,12px);letter-spacing:0.35em;color:rgba(220,80,60,0.8);text-transform:uppercase;text-align:center;line-height:1.9; }
+
+    .form-controls { display:flex;gap:10px;justify-content:flex-end;margin-bottom:12px; }
+    .ctrl-btn { font-family:'Montserrat',sans-serif;font-weight:400;font-size:10px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.4);background:none;border:1px solid rgba(255,255,255,0.12);padding:5px 12px;cursor:pointer;transition:color 0.2s,border-color 0.2s; }
+    .ctrl-btn:hover { color:#fff;border-color:rgba(255,255,255,0.4); }
+
+    .name-row { display:flex;align-items:center;gap:12px;padding:11px 16px;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);margin-bottom:6px;cursor:pointer;opacity:0;transform:translateX(-12px);transition:opacity 0.35s ease,transform 0.35s ease,border-color 0.2s,background 0.2s; }
+    .name-row:hover { border-color:rgba(255,255,255,0.18);background:rgba(255,255,255,0.05); }
+    .name-row.present { border-color:rgba(80,200,80,0.35);background:rgba(80,200,80,0.06); }
+    .name-row.absent  { border-color:rgba(192,57,43,0.25);background:rgba(192,57,43,0.03); }
+    .cb-wrap { position:relative;width:20px;height:20px;flex-shrink:0; }
+    .cb-wrap input[type="checkbox"] { opacity:0;width:0;height:0;position:absolute; }
+    .cb-box { width:20px;height:20px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;transition:all 0.2s; }
+    .cb-wrap input:checked ~ .cb-box { border-color:rgba(80,200,80,0.8);background:rgba(80,200,80,0.15); }
+    .cb-box::after { content:"✓";font-size:12px;color:rgba(80,200,80,0.9);opacity:0;transform:scale(0.5);transition:all 0.15s; }
+    .cb-wrap input:checked ~ .cb-box::after { opacity:1;transform:scale(1); }
+    .row-num { font-family:'Cormorant Garamond',serif;font-weight:600;font-size:10px;color:var(--gold);opacity:0.5;min-width:20px; }
+    .row-name { flex:1;font-family:'Montserrat',sans-serif;font-weight:300;font-size:clamp(12px,1.8vw,15px);letter-spacing:0.1em;color:rgba(255,255,255,0.85); }
+    .row-status { font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.15em;min-width:16px;text-align:center;color:rgba(255,255,255,0.2);transition:color 0.2s; }
+    .name-row.present .row-status { color:rgba(80,200,80,0.9); }
+    .name-row.absent  .row-status { color:rgba(192,57,43,0.7); }
+
+    .offering-block { margin-top:18px;border:1px solid rgba(201,168,76,0.2);background:rgba(201,168,76,0.03);padding:18px 20px;display:flex;flex-direction:column;gap:14px; }
+    .offering-title { font-family:'Bebas Neue',sans-serif;font-size:clamp(14px,2.5vw,20px);letter-spacing:0.35em;color:var(--gold); }
+    .offering-row { display:flex;gap:14px;flex-wrap:wrap; }
+    .field-group { display:flex;flex-direction:column;gap:6px;flex:1;min-width:130px; }
+    .field-label { font-family:'Montserrat',sans-serif;font-weight:300;font-size:10px;letter-spacing:0.45em;color:rgba(255,255,255,0.35);text-transform:uppercase; }
+    .field-input { background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.1em;padding:10px 14px;outline:none;width:100%;transition:border-color 0.2s; }
+    .field-input:focus { border-color:rgba(201,168,76,0.6); }
+
+    #submit-btn { margin-top:20px;width:100%;padding:16px;background:none;border:1px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.7);font-family:'Bebas Neue',sans-serif;font-size:clamp(16px,2.5vw,22px);letter-spacing:0.45em;cursor:pointer;position:relative;overflow:hidden;transition:border-color 0.3s,color 0.3s,background 0.3s; }
+    #submit-btn::before { content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.08),transparent);transform:translateX(-100%);transition:transform 0.5s; }
+    #submit-btn:hover { border-color:var(--gold);color:#fff; }
+    #submit-btn:hover::before { transform:translateX(100%); }
+    #submit-btn:active { background:rgba(201,168,76,0.1); }
+    #submit-btn:disabled { opacity:0.4;cursor:not-allowed; }
+    #submit-msg { font-family:'Montserrat',sans-serif;font-weight:300;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;text-align:center;margin-top:10px;min-height:18px;color:rgba(255,255,255,0);transition:color 0.4s; }
+    #submit-msg.success { color:rgba(80,200,80,0.85); }
+    #submit-msg.error   { color:rgba(192,57,43,0.85); }
+
+    #back-btn { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0);font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:0.45em;text-transform:uppercase;padding:11px 28px;cursor:pointer;z-index:60;transition:border-color 0.3s,color 0.5s,background 0.3s; }
+    #back-btn:hover { border-color:rgba(255,255,255,0.5);color:#fff !important;background:rgba(255,255,255,0.05); }
+
+    #wait-block { display:none;flex-direction:column;align-items:center;gap:0; }
+    #wait-block.visible { display:flex; }
+    #wait-icon { font-size:clamp(36px,7vw,64px);opacity:0;transform:translateY(-14px) scale(0.8);transition:opacity 0.5s,transform 0.5s cubic-bezier(0.16,1,0.3,1); }
+    #wait-title { font-family:'Bebas Neue',sans-serif;font-size:clamp(14px,3vw,26px);letter-spacing:0.4em;color:rgba(255,255,255,0);text-transform:uppercase;margin-top:18px;transition:color 0.5s; }
+    #wait-day-badge { display:inline-block;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(28px,7vw,72px);letter-spacing:0.12em;color:transparent;background:linear-gradient(135deg,var(--gold),var(--gold-light));-webkit-background-clip:text;background-clip:text;opacity:0;transform:scale(0.8);margin-top:6px;transition:opacity 0.6s,transform 0.6s cubic-bezier(0.16,1,0.3,1); }
+    #wait-msg { font-family:'Montserrat',sans-serif;font-weight:300;font-size:clamp(10px,1.6vw,14px);letter-spacing:0.35em;color:rgba(255,255,255,0);text-transform:uppercase;margin-top:14px;transition:color 0.5s; }
+    #wait-countdown { display:flex;gap:clamp(10px,2.5vw,22px);margin-top:22px; }
+    .cd-unit { display:flex;flex-direction:column;align-items:center;gap:4px; }
+    .cd-num { font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,6vw,58px);letter-spacing:0.05em;line-height:1;color:#fff;min-width:clamp(44px,9vw,80px);text-align:center;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);padding:8px 6px 4px;transition:color 0.15s; }
+    .cd-num.tick { color:var(--gold-light); }
+    .cd-sep { font-family:'Bebas Neue',sans-serif;font-size:clamp(24px,5vw,48px);color:rgba(255,255,255,0.3);align-self:flex-start;padding-top:8px;line-height:1; }
+    .cd-label { font-family:'Montserrat',sans-serif;font-weight:300;font-size:clamp(7px,1.1vw,10px);letter-spacing:0.35em;color:rgba(255,255,255,0.35);text-transform:uppercase; }
+    #wait-open-time { font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(11px,1.8vw,15px);letter-spacing:0.4em;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-top:14px;opacity:0;transition:opacity 0.6s; }
+    #wait-ring { width:clamp(80px,18vw,160px);height:clamp(80px,18vw,160px);border-radius:50%;border:1px solid rgba(201,168,76,0.25);margin-top:10px;position:relative;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.5s;animation:ringPulse 2.4s ease infinite; }
+    @keyframes ringPulse { 0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,0.2)} 50%{box-shadow:0 0 0 14px rgba(201,168,76,0)} }
+  </style>
+</head>
+<body>
+  <div id="flash"></div>
+  <div id="container"></div>
+
+  <div id="iyf-wrapper">
+    <div class="accent-line" id="line-top"></div>
+    <div id="iyf">IYF</div>
+    <div id="iyf-sub">Ignite Youth Fellowship</div>
+    <div class="accent-line" id="line-bottom"></div>
+  </div>
+
+  <div id="menu-screen">
+    <div class="menu-eyebrow" id="menu-eyebrow">Choose your gathering</div>
+    <button class="menu-btn" id="btn-0" onclick="handleOpen('youth')">
+      <div class="btn-inner"><span class="btn-index">01</span><span class="btn-label">Youth Meeting</span><span class="btn-arrow">›</span></div>
+    </button>
+    <button class="menu-btn" id="btn-1" onclick="handleOpen('girl')">
+      <div class="btn-inner"><span class="btn-index">02</span><span class="btn-label">Girl Prayer</span><span class="btn-arrow">›</span></div>
+    </button>
+    <button class="menu-btn" id="btn-2" onclick="handleOpen('boys')">
+      <div class="btn-inner"><span class="btn-index">03</span><span class="btn-label">Boys Prayer</span><span class="btn-arrow">›</span></div>
+    </button>
+  </div>
+
+  <div id="page-overlay">
+    <div id="open-block">
+      <div id="page-title"></div>
+      <div id="page-sub"></div>
+      <div class="page-deco-line" id="deco-top"></div>
+      <div id="date-badge"></div>
+
+      <div id="attendance-form">
+
+        <div id="names-loading-state">
+          <div class="spinner"></div>
+          <div class="loading-text">Checking records...</div>
+        </div>
+
+        <div id="already-submitted-banner">
+          <div class="submitted-icon">✓</div>
+          <div class="submitted-label">Already Submitted</div>
+          <div class="submitted-sub" id="submitted-summary"></div>
+        </div>
+
+        <button id="submit-btn" onclick="submitAttendance()" style="display:none;">Submit — Meeting Did Not Happen</button>
+        <div id="submit-msg"></div>
+
+        <div id="meeting-toggle-block" style="display:none;">
+          <div class="meeting-toggle-row" id="meeting-toggle-row" onclick="toggleMeetingHappened()">
+            <div class="toggle-cb-wrap">
+              <input type="checkbox" id="meeting-happened-cb">
+              <div class="toggle-cb-box"><div class="toggle-cb-inner"></div></div>
+            </div>
+            <div class="toggle-label-group">
+              <div class="toggle-main-label">Meeting Happened</div>
+              <div class="toggle-sub-label">Toggle on if meeting took place today</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="not-happened-info" style="display:none;">
+          <div class="info-text">Meeting did not happen · All members will be marked Absent · Offering Status N</div>
+        </div>
+
+        <div id="form-body" style="display:none;">
+          <div class="form-controls">
+            <button class="ctrl-btn" onclick="selectAll(true)">Select All Present</button>
+            <button class="ctrl-btn" onclick="selectAll(false)">Mark All Absent</button>
+          </div>
+          <div id="names-list"></div>
+          <div class="offering-block">
+            <div class="offering-title">Offering</div>
+            <div class="offering-row">
+              <div class="field-group">
+                <div class="field-label">Offered Amount</div>
+                <input class="field-input" id="offering-amount" type="number" min="0" placeholder="0" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div id="wait-block">
+      <div id="wait-icon">⏳</div>
+      <div id="wait-title">Not yet time</div>
+      <div id="wait-ring"><div id="wait-day-badge"></div></div>
+      <div id="wait-msg"></div>
+      <div id="wait-countdown">
+        <div class="cd-unit"><div class="cd-num" id="cd-days">00</div><div class="cd-label">Days</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="cd-hours">00</div><div class="cd-label">Hours</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="cd-mins">00</div><div class="cd-label">Mins</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="cd-secs">00</div><div class="cd-label">Secs</div></div>
+      </div>
+      <div id="wait-open-time"></div>
+    </div>
+
+    <button id="back-btn" onclick="goBack()">← Back</button>
+  </div>
+
+  <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6NPQ2xYrEXXw5i20UpyQ84DUeQII8kLr8jzywFGgQrIWMAbJM4PGA-i5habw73-qo8Q/exec';
+
+    const SESSIONS = {
+      youth: { title:'Youth Meeting', subtitle:'Gathering of the Faithful', requiredDay:0, dayName:'Sunday'   },
+      girl:  { title:'Girl Prayer',   subtitle:'Sisters in Spirit',          requiredDay:0, dayName:'Sunday'   },
+      boys:  { title:'Boys Prayer',   subtitle:'Brothers in Faith',          requiredDay:6, dayName:'Saturday' }
+    };
+
+    const dayNames = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+    const container = document.getElementById("container");
+    dayNames.forEach((day, i) => {
+      const div = document.createElement("div");
+      div.className = "day"; div.textContent = day;
+      div.style.animationDelay = (i * 0.42) + "s";
+      container.appendChild(div);
+    });
+
+    const allDays = () => document.querySelectorAll(".day");
+    const BASE = dayNames.length * 420;
+
+    setTimeout(() => { allDays().forEach(d => { if (d.textContent !== "Sunday") d.classList.add("strike"); }); }, BASE + 300);
+    setTimeout(() => { allDays().forEach(d => { if (d.textContent === "Sunday") d.classList.add("sunday-pulse"); }); }, BASE + 500 + dayNames.length * 60);
+
+    setTimeout(() => {
+      document.getElementById("flash").classList.add("pop");
+      setTimeout(() => {
+        container.style.display = "none";
+        const w = document.getElementById("iyf-wrapper"); w.classList.add("show");
+        ["iyf","iyf-sub","line-top","line-bottom"].forEach(id => document.getElementById(id).classList.add("animate"));
+      }, 80);
+    }, BASE + 300 + 1600);
+
+    setTimeout(() => {
+      document.getElementById("iyf-wrapper").style.display = "none";
+      document.getElementById("menu-screen").classList.add("show");
+      document.getElementById("menu-eyebrow").classList.add("show");
+      ["btn-0","btn-1","btn-2"].forEach((id,i) => setTimeout(() => document.getElementById(id).classList.add("show"), 250 + i*160));
+    }, BASE + 300 + 1600 + 1500);
+
+    const TODAY       = new Date().getDay();
+    const IS_SUNDAY   = TODAY === 0;
+    const IS_SATURDAY = TODAY === 6;
+
+    let currentType     = null;
+    let meetingHappened = false;
+    let loadedNames     = [];
+
+    function handleOpen(type) {
+      const s       = SESSIONS[type];
+      const allowed = (s.requiredDay === 0 && IS_SUNDAY) || (s.requiredDay === 6 && IS_SATURDAY);
+      allowed ? openPage(type) : showWait(s.title, s.dayName, s.requiredDay);
+    }
+
+    function formatDate(d) {
+      const y  = d.getFullYear();
+      const m  = String(d.getMonth() + 1).padStart(2,"0");
+      const dd = String(d.getDate()).padStart(2,"0");
+      return `${y}-${m}-${dd}`;
+    }
+
+    async function openPage(type) {
+      currentType     = type;
+      meetingHappened = false;
+      loadedNames     = [];
+
+      const s = SESSIONS[type];
+
+      ["page-title","page-sub","deco-top"].forEach(id => document.getElementById(id).classList.remove("reveal"));
+
+      document.getElementById("back-btn").style.color          = "rgba(255,255,255,0)";
+      document.getElementById("attendance-form").style.opacity = "0";
+      document.getElementById("date-badge").style.opacity      = "0";
+      document.getElementById("wait-block").classList.remove("visible");
+      document.getElementById("open-block").style.display      = "flex";
+
+      document.getElementById("names-loading-state").style.display    = "flex";
+      document.getElementById("already-submitted-banner").style.display = "none";
+      document.getElementById("meeting-toggle-block").style.display   = "none";
+      document.getElementById("not-happened-info").style.display      = "none";
+      document.getElementById("form-body").style.display              = "none";
+      document.getElementById("submit-btn").style.display             = "none";
+      document.getElementById("submit-btn").disabled                  = false;
+      document.getElementById("submit-btn").textContent               = "Submit — Meeting Did Not Happen";
+      document.getElementById("submit-msg").textContent               = "";
+      document.getElementById("submit-msg").className                 = "";
+      document.getElementById("names-list").innerHTML                 = "";
+      document.getElementById("offering-amount").value                = "";
+      document.getElementById("meeting-happened-cb").checked          = false;
+      document.getElementById("meeting-toggle-row").classList.remove("active");
+
+      document.getElementById("page-title").textContent = s.title;
+      document.getElementById("page-sub").textContent   = s.subtitle;
+
+      const today    = new Date();
+      const todayStr = formatDate(today);
+      document.getElementById("date-badge").textContent =
+        today.toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+      const overlay = document.getElementById("page-overlay");
+      overlay.classList.remove("entering","exiting");
+      void overlay.offsetWidth;
+      overlay.classList.add("entering");
+      overlay.style.pointerEvents = "all";
+      overlay.scrollTop = 0;
+
+      setTimeout(() => {
+        ["page-title","page-sub","deco-top"].forEach(id => document.getElementById(id).classList.add("reveal"));
+        document.getElementById("back-btn").style.color = "rgba(255,255,255,0.5)";
+      }, 200);
+
+      setTimeout(async () => {
+        document.getElementById("date-badge").style.opacity     = "1";
+        document.getElementById("attendance-form").style.opacity = "1";
+
+        try {
+          const res  = await fetch(`${SCRIPT_URL}?route=${type}`, { redirect: "follow" });
+          const data = await res.json();
+          if (Array.isArray(data)) loadedNames = data.filter(n => n && String(n).trim() !== "");
+        } catch(e) { loadedNames = []; }
+
+        let alreadySubmitted = false;
+        try {
+          const res  = await fetch(`${SCRIPT_URL}?action=checkDate&routeKey=${type}&date=${todayStr}`, { redirect: "follow" });
+          const data = await res.json();
+          alreadySubmitted = (data.result === "P");
+        } catch(e) { alreadySubmitted = false; }
+
+        document.getElementById("names-loading-state").style.display = "none";
+
+        if (alreadySubmitted) {
+          showWait(s.title, s.dayName, s.requiredDay, true);
+        } else {
+          buildNameList(loadedNames);
+          document.getElementById("meeting-toggle-block").style.display = "block";
+          document.getElementById("not-happened-info").style.display    = "block";
+          document.getElementById("submit-btn").style.display           = "block";
+        }
+
+      }, 500);
+    }
+
+    function toggleMeetingHappened() {
+      meetingHappened = !meetingHappened;
+      document.getElementById("meeting-happened-cb").checked = meetingHappened;
+      const toggleRow = document.getElementById("meeting-toggle-row");
+      const formBody  = document.getElementById("form-body");
+      const notInfo   = document.getElementById("not-happened-info");
+      const submitBtn = document.getElementById("submit-btn");
+
+      if (meetingHappened) {
+        toggleRow.classList.add("active");
+        formBody.style.display = "block";
+        notInfo.style.display  = "none";
+        submitBtn.textContent  = "Submit Attendance";
+        document.getElementById("offering-amount").value = "";
+      } else {
+        toggleRow.classList.remove("active");
+        formBody.style.display = "none";
+        notInfo.style.display  = "block";
+        submitBtn.textContent  = "Submit — Meeting Did Not Happen";
+        document.querySelectorAll("#names-list .name-row").forEach(row => {
+          const cb = row.querySelector("input[type='checkbox']");
+          cb.checked = false;
+          setRowState(row, false);
+        });
+        document.getElementById("offering-amount").value = "0";
+      }
+    }
+
+    function buildNameList(names) {
+      const list = document.getElementById("names-list");
+      list.innerHTML = "";
+
+      if (!names || names.length === 0) {
+        list.innerHTML = `<div style="font-family:'Montserrat',sans-serif;font-size:12px;letter-spacing:0.3em;color:rgba(255,255,255,0.3);text-align:center;padding:20px 0;text-transform:uppercase;">No names found in sheet</div>`;
+        return;
+      }
+
+      names.forEach((name, i) => {
+        const row = document.createElement("div");
+        row.className    = "name-row absent";
+        row.dataset.name = name;
+        row.innerHTML = `
+          <div class="cb-wrap">
+            <input type="checkbox" id="cb_${i}">
+            <div class="cb-box"></div>
+          </div>
+          <span class="row-num">${String(i+1).padStart(2,"0")}</span>
+          <span class="row-name">${name}</span>
+          <span class="row-status">A</span>`;
+        row.onclick = () => {
+          const cb = row.querySelector("input[type='checkbox']");
+          cb.checked = !cb.checked;
+          setRowState(row, cb.checked);
+        };
+        row.querySelector("input").onchange = function() { setRowState(row, this.checked); };
+        list.appendChild(row);
+        setTimeout(() => { row.style.opacity="1"; row.style.transform="translateX(0)"; }, 60 + i*30);
+      });
+    }
+
+    function setRowState(row, isPresent) {
+      const s = row.querySelector(".row-status");
+      if (isPresent) { row.classList.remove("absent"); row.classList.add("present"); s.textContent = "P"; }
+      else           { row.classList.remove("present"); row.classList.add("absent");  s.textContent = "A"; }
+    }
+
+    function selectAll(checked) {
+      document.querySelectorAll("#names-list .name-row").forEach(row => {
+        const cb = row.querySelector("input[type='checkbox']");
+        cb.checked = checked;
+        setRowState(row, checked);
+      });
+    }
+
+    async function submitAttendance() {
+      const btn = document.getElementById("submit-btn");
+      const msg = document.getElementById("submit-msg");
+
+      const attendance = {};
+      if (!meetingHappened) {
+        loadedNames.forEach(name => { attendance[name] = "A"; });
+      } else {
+        document.querySelectorAll("#names-list .name-row").forEach(row => {
+          const cb = row.querySelector("input[type='checkbox']");
+          attendance[row.dataset.name] = cb.checked ? "P" : "A";
+        });
+      }
+
+      const offering = document.getElementById("offering-amount").value || "0";
+      const status   = meetingHappened ? "Y" : "N";
+      const todayStr = formatDate(new Date());
+
+      const payload = {
+        routeKey   : currentType,
+        date       : todayStr,
+        attendance : attendance,
+        offering   : offering,
+        status     : status
+      };
+
+      btn.disabled    = true;
+      btn.textContent = "Submitting...";
+      msg.textContent = "";
+      msg.className   = "";
+
+      try {
+        const res    = await fetch(SCRIPT_URL, {
+          method   : "POST",
+          redirect : "follow",
+          headers  : { "Content-Type": "text/plain;charset=utf-8" },
+          body     : JSON.stringify(payload)
+        });
+        const result = await res.json();
+
+        if (result.status === "ok") {
+          btn.textContent = "✓ Submitted";
+          msg.textContent = meetingHappened
+            ? `Attendance saved · Status Y · ${todayStr}`
+            : `All Absent · Status N · Saved · ${todayStr}`;
+          msg.className = "success";
+
+          setTimeout(() => {
+            document.getElementById("meeting-toggle-block").style.display = "none";
+            document.getElementById("not-happened-info").style.display    = "none";
+            document.getElementById("form-body").style.display            = "none";
+            btn.style.display = "none";
+            msg.textContent   = "";
+            showWait(SESSIONS[currentType].title, SESSIONS[currentType].dayName, SESSIONS[currentType].requiredDay, true);
+          }, 2000);
+
+        } else {
+          throw new Error(result.message || "Unknown error");
+        }
+
+      } catch(err) {
+        btn.disabled    = false;
+        btn.textContent = meetingHappened ? "Submit Attendance" : "Submit — Meeting Did Not Happen";
+        msg.textContent = "Failed: " + (err.message || "Check connection or redeploy script");
+        msg.className   = "error";
+      }
+    }
+
+    let countdownInterval = null;
+
+    function getNextOccurrence(targetDay) {
+      const now  = new Date();
+      const next = new Date(now);
+      let diff   = (targetDay - now.getDay() + 7) % 7;
+      if (diff === 0) diff = 7;
+      next.setDate(now.getDate() + diff);
+      next.setHours(0, 0, 0, 0);
+      return next;
+    }
+
+    function pad2(n) { return String(n).padStart(2,"0"); }
+
+    function tickFlash(el) {
+      el.classList.remove("tick"); void el.offsetWidth; el.classList.add("tick");
+      setTimeout(() => el.classList.remove("tick"), 200);
+    }
+
+    function startCountdown(targetDay) {
+      if (countdownInterval) clearInterval(countdownInterval);
+      const target = getNextOccurrence(targetDay);
+
+      function update() {
+        const diff = target - new Date();
+        if (diff <= 0) { clearInterval(countdownInterval); return; }
+        const tot = Math.floor(diff / 1000);
+        const d = Math.floor(tot / 86400), h = Math.floor((tot % 86400) / 3600),
+              m = Math.floor((tot % 3600) / 60), s = tot % 60;
+        const dEl = document.getElementById("cd-days"),   hEl = document.getElementById("cd-hours"),
+              mEl = document.getElementById("cd-mins"),   sEl = document.getElementById("cd-secs");
+        const pm = mEl.textContent, ph = hEl.textContent;
+        dEl.textContent=pad2(d); hEl.textContent=pad2(h); mEl.textContent=pad2(m); sEl.textContent=pad2(s);
+        tickFlash(sEl);
+        if (pad2(m)!==pm) tickFlash(mEl);
+        if (pad2(h)!==ph) tickFlash(hEl);
+      }
+      update();
+      countdownInterval = setInterval(update, 1000);
+      document.getElementById("wait-open-time").textContent =
+        "Opens " + target.toLocaleDateString(undefined, { weekday:"long", month:"long", day:"numeric" });
+    }
+
+    function showWait(title, dayName, requiredDay, alreadyDone) {
+      const overlay = document.getElementById("page-overlay");
+      const wi   = document.getElementById("wait-icon");
+      const wt   = document.getElementById("wait-title");
+      const wd   = document.getElementById("wait-day-badge");
+      const wm   = document.getElementById("wait-msg");
+      const ring = document.getElementById("wait-ring");
+      const wot  = document.getElementById("wait-open-time");
+      const back = document.getElementById("back-btn");
+
+      document.getElementById("open-block").style.display = "none";
+      document.getElementById("wait-block").classList.add("visible");
+
+      wi.style.opacity   = "0"; wi.style.transform = "translateY(-14px) scale(0.8)";
+      wt.style.color     = "rgba(255,255,255,0)";
+      wd.style.opacity   = "0"; wd.style.transform = "scale(0.8)";
+      wm.style.color     = "rgba(255,255,255,0)";
+      ring.style.opacity = "0"; wot.style.opacity  = "0";
+      back.style.color   = "rgba(255,255,255,0)";
+
+      if (alreadyDone) {
+        wi.textContent = "✓";
+        wt.textContent = "Already Submitted";  
+        wd.textContent = dayName;
+        wm.textContent = "Next " + title + " on " + dayName;
+      } else {
+        wi.textContent = "⏳";
+        wd.textContent = dayName;
+        wm.textContent = title + " opens on " + dayName;
+      }
+
+      document.getElementById("wait-title").textContent = alreadyDone ? "See you next week" : "Not yet time";
+
+      startCountdown(requiredDay);
+
+      overlay.classList.remove("entering","exiting");
+      void overlay.offsetWidth;
+      overlay.classList.add("entering");
+      overlay.style.pointerEvents = "all";
+
+      setTimeout(() => { wi.style.opacity="1"; wi.style.transform="translateY(0) scale(1)"; }, 300);
+      setTimeout(() => { wt.style.color="rgba(255,255,255,0.9)"; }, 450);
+      setTimeout(() => { ring.style.opacity="1"; }, 500);
+      setTimeout(() => { wd.style.opacity="1"; wd.style.transform="scale(1)"; }, 550);
+      setTimeout(() => { wm.style.color="rgba(255,255,255,0.55)"; }, 700);
+      setTimeout(() => { wot.style.opacity="1"; }, 900);
+      setTimeout(() => { back.style.color="rgba(255,255,255,0.5)"; }, 1100);
+    }
+
+    function goBack() {
+      if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+      const overlay = document.getElementById("page-overlay");
+      overlay.classList.remove("entering");
+      void overlay.offsetWidth;
+      overlay.classList.add("exiting");
+      overlay.style.pointerEvents = "none";
+      setTimeout(() => {
+        overlay.classList.remove("exiting");
+        overlay.style.clipPath = "inset(0 100% 0 0)";
+        document.getElementById("open-block").style.display = "flex";
+        document.getElementById("wait-block").classList.remove("visible");
+      }, 460);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+venv/
+env/
+.venv/
+ENV/
+
+# Environment variables - NEVER commit these (contain secrets)
+.env
+*.env
+
+# Google OAuth credentials - SENSITIVE
+token.json
+credentials.json
+
+# Database
+*.db
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Alembic cache
+alembic/__pycache__/
+
+# Temp files
+*.tmp
+*.bak
