@@ -18,7 +18,9 @@ class TrainerService:
                 )
     
             courses = db.query(CourseTable.course_id).filter(
-                CourseTable.instructor_id == token.get("user_id")
+                CourseTable.instructor_id == token.get("user_id"),
+                CourseTable.is_active == True,
+                CourseTable.draft == False
             ).all()
     
             course_ids = [c.course_id for c in courses]
