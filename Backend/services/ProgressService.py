@@ -1,0 +1,287 @@
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from sqlalchemy import exists, and_, func
+from datetime import datetime
+import uuid
+
+# Models
+from Models.Course_Tables.course_details import CourseTable
+from Models.Course_Tables.Course_Module import CourseModuleTable
+from Models.Course_Tables.Course_Prerec_Video import CourseVideoTable
+from Models.Course_Tables.Live_Course import LiveCourseTable
+from Models.Assessment_Tables.Assessment_table import AssessmentTable
+from Models.Assessment_Tables.Question_table import QuestionTable
+from Models.Assessment_Tables.Options_table import optionTable
+
+# Progress Models
+from Models.Progress.VideoProgressTable import VideoProgressTable
+from Models.Progress.LiveAttendanceTable import LiveAttendanceTable
+from Models.Progress.AssessmentAttemptTable import AssessmentAttemptTable
+from Models.Progress.ModuleProgressTable import ModuleProgressTable
+from Models.Progress.CourseProgressTable import CourseProgressTable
+
+class ProgressService:
+    async def mark_video_progress(self, user_id: str, course_id: str, module_id: str, video_id: str, db: Session):
+        existing = db.query(VideoProgressTable).filter(
+            VideoProgressTable.User_ID == user_id,
+            VideoProgressTable.Video_ID == video_id
+        ).first()
+
+        if not existing:
+            new_prog = VideoProgressTable(
+                Video_Progress_ID=f"VID-PROG-{uuid.uuid4().hex[:8]}",
+                User_ID=user_id,
+                Video_ID=video_id,
+                Module_ID=module_id,
+                Completed_At=datetime.utcnow()
+            )
+            db.add(new_prog)
+            db.commit()
+
+            # Recalculate module progress
+            self._calculate_module_progress(user_id, course_id, module_id, db)
+
+        return {"message": "Video marked as completed successfully"}
+
+    async def submit_assessment(self, user_id: str, course_id: str, module_id: str, assessment_id: str, answers: dict[str, str], db: Session):
+        # 1. Check existing attempt
+        attempt = db.query(AssessmentAttemptTable).filter(
+            AssessmentAttemptTable.User_ID == user_id,
+            AssessmentAttemptTable.Assessment_ID == assessment_id
+        ).first()
+
+        attempt_no = 1
+        if attempt:
+            if attempt.Status == "Passed":
+                return {
+                    "message": "Assessment already passed",
+                    "score": attempt.Score,
+                    "attempt_no": attempt.Attempt_No,
+                    "status": attempt.Status,
+                    "passed": True
+                }
+            if attempt.Attempt_No >= 3:
+                raise HTTPException(status_code=400, detail="Maximum distinct attempts reached. Contact Admin to reset.")
+            attempt_no = attempt.Attempt_No + 1
+
+        # 2. Fetch assessment details
+        assessment = db.query(AssessmentTable).filter(AssessmentTable.Assessment_ID == assessment_id).first()
+        if not assessment:
+            raise HTTPException(status_code=404, detail="Assessment not found")
+
+        # 3. Calculate score
+        score = 0
+        for q_id, o_id in answers.items():
+            correct_opt = db.query(optionTable).filter(
+                optionTable.Question_ID == q_id,
+                optionTable.Is_Correct == True
+            ).first()
+            if correct_opt and correct_opt.Option_ID == o_id:
+                # Add marks for this question
+                question = db.query(QuestionTable).filter(QuestionTable.Question_ID == q_id).first()
+                if question:
+                    score += question.Mark
+
+        passed = score >= assessment.Passing_Mark
+        new_status = "Passed" if passed else "Failed"
+
+        # 4. Save attempt
+        if attempt:
+            # We ONLY update if the new score is higher OR if they passed, keep best score
+            if score > attempt.Score:
+                attempt.Score = score
+            attempt.Attempt_No = attempt_no
+            if passed:
+                attempt.Status = new_status
+            attempt.Completed_At = datetime.utcnow()
+        else:
+            new_attempt = AssessmentAttemptTable(
+                Attempt_ID=f"ATTEMPT-{uuid.uuid4().hex[:8]}",
+                User_ID=user_id,
+                Assessment_ID=assessment_id,
+                Module_ID=module_id,
+                Score=score,
+                Attempt_No=attempt_no,
+                Status=new_status,
+                Completed_At=datetime.utcnow()
+            )
+            db.add(new_attempt)
+
+        db.commit()
+
+        if passed:
+            self._calculate_module_progress(user_id, course_id, module_id, db)
+
+        return {
+            "message": "Assessment submitted successfully",
+            "score": score,
+            "attempt_no": attempt_no,
+            "status": new_status,
+            "passed": passed
+        }
+
+    def _calculate_module_progress(self, user_id: str, course_id: str | None, module_id: str, db: Session):
+        """ Checks if all required items in a module are completed """
+
+        if not course_id:
+            mod = db.query(CourseModuleTable).filter(CourseModuleTable.Module_ID == module_id).first()
+            if not mod:
+                return False
+            course_id = mod.Course_ID
+
+        # Check total videos vs completed videos
+        video_ids = db.query(CourseVideoTable.Video_ID).filter(CourseVideoTable.Module_ID == module_id).all()
+        if video_ids:
+            total_videos = len(video_ids)
+            completed_videos = db.query(func.count(VideoProgressTable.Video_ID)).filter(
+                VideoProgressTable.User_ID == user_id,
+                VideoProgressTable.Module_ID == module_id
+            ).scalar()
+            if completed_videos < total_videos:
+                return False
+
+        # Check live sessions
+        live_ids = db.query(LiveCourseTable.Live_ID).filter(LiveCourseTable.Module_ID == module_id).all()
+        if live_ids:
+            total_lives = len(live_ids)
+            completed_lives = db.query(func.count(LiveAttendanceTable.Live_Class_ID)).filter(
+                LiveAttendanceTable.User_ID == user_id,
+                LiveAttendanceTable.Module_ID == module_id,
+                LiveAttendanceTable.Is_Present == True
+            ).scalar()
+            if completed_lives < total_lives:
+                return False
+
+        # Check assessments
+        assessment_ids = db.query(AssessmentTable.Assessment_ID).filter(AssessmentTable.Module_ID == module_id).all()
+        if assessment_ids:
+            total_assessments = len(assessment_ids)
+            completed_assessments = db.query(func.count(AssessmentAttemptTable.Assessment_ID)).filter(
+                AssessmentAttemptTable.User_ID == user_id,
+                AssessmentAttemptTable.Module_ID == module_id,
+                AssessmentAttemptTable.Status == "Passed"
+            ).scalar()
+            if completed_assessments < total_assessments:
+                return False
+
+        # Everything is completed -> update module progress
+        mod_prog = db.query(ModuleProgressTable).filter(
+            ModuleProgressTable.User_ID == user_id,
+            ModuleProgressTable.Module_ID == module_id
+        ).first()
+
+        if not mod_prog:
+            mod_prog = ModuleProgressTable(
+                Progress_ID=f"MOD-PROG-{uuid.uuid4().hex[:8]}",
+                User_ID=user_id,
+                Course_ID=course_id,
+                Module_ID=module_id,
+                Status="Completed",
+                Completed_At=datetime.utcnow()
+            )
+            db.add(mod_prog)
+        else:
+            mod_prog.Status = "Completed"
+            mod_prog.Completed_At = datetime.utcnow()
+
+        db.commit()
+
+        # Trigger course recalculation
+        self._calculate_course_progress(user_id, course_id, db)
+        return True
+
+    def _calculate_course_progress(self, user_id: str, course_id: str, db: Session):
+        total_modules = db.query(func.count(CourseModuleTable.Module_ID)).filter(
+            CourseModuleTable.Course_ID == course_id
+        ).scalar() or 0
+
+        if total_modules == 0:
+            return
+
+        completed_modules = db.query(func.count(ModuleProgressTable.Module_ID)).filter(
+            ModuleProgressTable.User_ID == user_id,
+            ModuleProgressTable.Course_ID == course_id,
+            ModuleProgressTable.Status == "Completed"
+        ).scalar() or 0
+
+        percent = int((completed_modules / total_modules) * 100)
+
+        course_prog = db.query(CourseProgressTable).filter(
+            CourseProgressTable.User_ID == user_id,
+            CourseProgressTable.Course_ID == course_id
+        ).first()
+
+        if not course_prog:
+            course_prog = CourseProgressTable(
+                Course_Progress_ID=f"CRS-PROG-{uuid.uuid4().hex[:8]}",
+                User_ID=user_id,
+                Course_ID=course_id,
+                Completed_Module=completed_modules,
+                Total_Modules=total_modules,
+                Progress_Percentage=percent,
+                Completed_At=datetime.utcnow() if percent == 100 else None
+            )
+            db.add(course_prog)
+        else:
+            course_prog.Completed_Module = completed_modules
+            course_prog.Total_Modules = total_modules
+            course_prog.Progress_Percentage = percent
+            if percent == 100 and not course_prog.Completed_At:
+                course_prog.Completed_At = datetime.utcnow()
+
+        db.commit()
+
+    async def get_course_progress(self, user_id: str, course_id: str, db: Session):
+        course_prog = db.query(CourseProgressTable).filter(
+            CourseProgressTable.User_ID == user_id,
+            CourseProgressTable.Course_ID == course_id
+        ).first()
+
+        percent = course_prog.Progress_Percentage if course_prog else 0
+        comp_mods = course_prog.Completed_Module if course_prog else 0
+        tot_mods = course_prog.Total_Modules if course_prog else 0
+
+        mod_progs = db.query(ModuleProgressTable).filter(
+            ModuleProgressTable.User_ID == user_id,
+            ModuleProgressTable.Course_ID == course_id
+        ).all()
+
+        mod_dict = {mp.Module_ID: mp.Status for mp in mod_progs}
+
+        assess_progs = db.query(AssessmentAttemptTable).join(
+            CourseModuleTable, CourseModuleTable.Module_ID == AssessmentAttemptTable.Module_ID
+        ).filter(
+            AssessmentAttemptTable.User_ID == user_id,
+            CourseModuleTable.Course_ID == course_id
+        ).all()
+
+        a_list = [
+            {
+                "assessment_id": ap.Assessment_ID,
+                "score": ap.Score,
+                "attempt_no": ap.Attempt_No,
+                "status": ap.Status
+            } for ap in assess_progs
+        ]
+
+        return {
+            "course_id": course_id,
+            "total_modules": tot_mods,
+            "completed_modules": comp_mods,
+            "progress_percentage": percent,
+            "modules_progress": mod_dict,
+            "assessments_progress": a_list
+        }
+
+    async def reset_assessment_attempts(self, user_id: str, assessment_id: str, db: Session):
+        attempt = db.query(AssessmentAttemptTable).filter(
+            AssessmentAttemptTable.User_ID == user_id,
+            AssessmentAttemptTable.Assessment_ID == assessment_id
+        ).first()
+
+        if not attempt:
+            raise HTTPException(status_code=404, detail="No attempt found to reset")
+
+        db.delete(attempt)
+        db.commit()
+        return {"message": "Assessment attempts successfully reset for user"}

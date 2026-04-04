@@ -111,4 +111,31 @@ class MarkLiveAttendanceRequest(BaseModel):
 
 class MarkLiveAttendanceResponse(BaseModel):
     message: str
-    is_present: bool
+class SubmitAssessmentRequest(BaseModel):
+    course_id: str
+    module_id: str
+    assessment_id: str
+    answers: dict[str, str]  # mapping of question_id to selected option_id
+
+class SubmitAssessmentResponse(BaseModel):
+    message: str
+    score: int
+    attempt_no: int
+    status: str
+    passed: bool
+
+class MarkVideoProgressRequest(BaseModel):
+    course_id: str
+    module_id: str
+    video_id: str
+
+class MarkVideoProgressResponse(BaseModel):
+    message: str
+
+class CourseProgressResponse(BaseModel):
+    course_id: str
+    total_modules: int
+    completed_modules: int
+    progress_percentage: int
+    modules_progress: dict[str, str]  # module_id -> status
+    assessments_progress: list[dict]  # array of basic stats

@@ -80,3 +80,38 @@ async def mark_live_attendance_api(request: MarkLiveAttendanceRequest, db: Sessi
         token=token,
         db=db
     )
+
+from schemas.user import SubmitAssessmentRequest, SubmitAssessmentResponse, MarkVideoProgressRequest, MarkVideoProgressResponse, CourseProgressResponse
+from services.ProgressService import ProgressService
+
+@router_user.post("/mark-video-progress", response_model=MarkVideoProgressResponse, summary="Mark Video Progress")
+async def mark_video_progress_api(request: MarkVideoProgressRequest, db: Session = Depends(get_db), token: dict = Depends(user_Authorization())):
+    user_id = token.get("user_id")
+    return await ProgressService().mark_video_progress(
+        user_id=user_id,
+        course_id=request.course_id,
+        module_id=request.module_id,
+        video_id=request.video_id,
+        db=db
+    )
+
+@router_user.post("/submit-assessment", response_model=SubmitAssessmentResponse, summary="Submit Assessment")
+async def submit_assessment_api(request: SubmitAssessmentRequest, db: Session = Depends(get_db), token: dict = Depends(user_Authorization())):
+    user_id = token.get("user_id")
+    return await ProgressService().submit_assessment(
+        user_id=user_id,
+        course_id=request.course_id,
+        module_id=request.module_id,
+        assessment_id=request.assessment_id,
+        answers=request.answers,
+        db=db
+    )
+
+@router_user.get("/course/{course_id}/progress", response_model=CourseProgressResponse, summary="Get Course Progress")
+async def get_course_progress_api(course_id: str, db: Session = Depends(get_db), token: dict = Depends(user_Authorization())):
+    user_id = token.get("user_id")
+    return await ProgressService().get_course_progress(
+        user_id=user_id,
+        course_id=course_id,
+        db=db
+    )

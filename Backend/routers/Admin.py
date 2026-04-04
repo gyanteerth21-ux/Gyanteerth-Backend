@@ -9,6 +9,8 @@ from schemas.user import GenderEnum
 from services.AdminService import AdminService
 from schemas.admin import Trainerrequest,trainer_request_get,Trainer_update_request,Trainer_email,CreateCategory,CategoryResponse,AllCategoriesResponse,UpdateCategory,CreateCourseRequest,CourseResponse,CourseDemoResponse,CreateCourseDemoRequest,CreateModuleRequest,CreateModuleResponse,CreateNotesRequest,CreateNotesResponse,CreateVideoRequest,CreateVideoResponse,CreateLiveCourseRequest,CreateLiveCourseResponse,CreateRecVideoRequest,CreateRecVideoResponse,CreateAssessmentRequest,CreateAssessmentResponse,CreateQuestionRequest,CreateQuestionResponse,CreateOptionRequest,CreateOptionResponse,SubCategoryResponse,UpdateCourseRequest,UpdateCourseResponse,UpdateCourseDemoRequest,UpdateCourseDemoResponse,UpdateModuleRequest,UpdateModuleResponse,UpdateNotesRequest,UpdateNotesResponse,UpdateVideoRequest,UpdateVideoResponse,UpdateLiveCourseRequest,UpdateLiveCourseResponse,UpdateRecVideoRequest,UpdateRecVideoResponse,UpdateAssessmentRequest,UpdateAssessmentResponse,UpdateQuestionRequest,UpdateQuestionResponse,UpdateOptionRequest,UpdateOptionResponse,SwapQuestionRequest,SwapOptionRequest,ActivationResponse,SwapModuleRequest
 from typing import Annotated
+from schemas.admin import ResetAssessmentResponse
+from services.ProgressService import ProgressService
 
 router_admin= APIRouter()
 
@@ -145,6 +147,14 @@ async def update_course_demo(demo_id: str,data: UpdateCourseDemoRequest,db: Sess
 @router_admin.put("/update_module/{module_id}",response_model=UpdateModuleResponse,summary="Update Course Module",description="Update an existing module inside a course")
 async def update_module(module_id: str,data: UpdateModuleRequest,db: Session = Depends(get_db),token: dict = Depends(admin_Authorization())):
     return await AdminService().update_module_service(module_id, data, db)
+
+@router_admin.delete("/user/{user_id}/assessment/{assessment_id}/reset", response_model=ResetAssessmentResponse, summary="Reset Assessment Attempts", description="Resets failed assessment attempts for a user so they can try again.")
+async def reset_assessment_api(user_id: str, assessment_id: str, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await ProgressService().reset_assessment_attempts(
+        user_id=user_id,
+        assessment_id=assessment_id,
+        db=db
+    )
 
 @router_admin.put("/update_notes/{notes_id}",response_model=UpdateNotesResponse,summary="Update Course Notes",description="Update notes for a course")
 async def update_notes(notes_id: str,data: UpdateNotesRequest,db: Session = Depends(get_db),token: dict = Depends(admin_Authorization())):

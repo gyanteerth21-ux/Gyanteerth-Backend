@@ -863,3 +863,6 @@ class ActivationResponse(BaseModel):
 class SwapModuleRequest(BaseModel):
     module_id_1: str
     module_id_2: str
+
+class ResetAssessmentResponse(BaseModel):
+    message: str

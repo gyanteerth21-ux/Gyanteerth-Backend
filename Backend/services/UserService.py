@@ -194,6 +194,10 @@ class UserService:
             message = "Attendance marked successfully"
 
         db.commit()
+
+        from services.ProgressService import ProgressService
+        ProgressService()._calculate_module_progress(user_id, None, module_id, db)
+
         return {
             "message": message,
             "is_present": attendance.Is_Present
