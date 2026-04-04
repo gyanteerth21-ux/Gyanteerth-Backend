@@ -2355,7 +2355,18 @@ class AdminService:
 
             subject = "Course Activated – Now Live"
             
-            body = course_active_template(course.course_id,course.course_title,course.course_Type,course.duration,course.level,course.language)
+            full_details = await self.get_full_course_details(course.course_id, db)
+            course_structure = full_details.get("course", {}) if isinstance(full_details, dict) else full_details
+            
+            body = course_active_template(
+                course.course_id,
+                course.course_title,
+                course.course_Type,
+                course.duration,
+                course.level,
+                course.language,
+                course_structure
+            )
             background_tasks.add_task(send_email, trainer_idd, subject, body)
             return True, "Course activated successfully"
         except Exception as e:

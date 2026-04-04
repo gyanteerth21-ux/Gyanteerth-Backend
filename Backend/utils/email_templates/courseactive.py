@@ -1,4 +1,4 @@
-def course_active_template(course_id,course_title,content_type,course_duration,course_level,course_language):
+def course_active_template(course_id,course_title,content_type,course_duration,course_level,course_language, course_structure):
     return f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -79,6 +79,27 @@ def course_active_template(course_id,course_title,content_type,course_duration,c
                   </td>
                 </tr>
 
+              </table>
+              <br/>
+
+              <!-- Course Structure Box -->
+              <h3 style="color:#4CAF50; font-size:16px;">Course Structure</h3>
+              <table width="100%" cellpadding="10" cellspacing="0" style="margin-bottom:20px; border-collapse:collapse; border:1px solid #e0e0e0;">
+                <tr style="background:#f1f1f1;">
+                  <th style="border:1px solid #e0e0e0; text-align:left;">Module</th>
+                  <th style="border:1px solid #e0e0e0; text-align:center;">Content Summary</th>
+                </tr>
+                {"".join([
+                    f'''<tr>
+                          <td style="border:1px solid #e0e0e0; font-weight:bold;">{mod.get("title", "")}</td>
+                          <td style="border:1px solid #e0e0e0; text-align:center; font-size:13px; color:#555;">
+                            Videos: {len(mod.get("content", {}).get("videos", []))} <br/>
+                            Live Sessions: {len(mod.get("content", {}).get("live_sessions", []))} <br/>
+                            Assessments: {len(mod.get("content", {}).get("assessments", []))}
+                          </td>
+                        </tr>'''
+                    for mod in course_structure.get("modules", [])
+                ]) if course_structure and course_structure.get("modules") else '<tr><td colspan="2" style="border:1px solid #e0e0e0; text-align:center;">No structure available</td></tr>'}
               </table>
 
               <p>
