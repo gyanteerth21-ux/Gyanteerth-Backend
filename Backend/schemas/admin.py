@@ -886,4 +886,24 @@ class StudentProgressDetail(BaseModel):
 class CourseStudentsProgressResponse(BaseModel):
     status: bool
     course_id: str
-    data: List[StudentProgressDetail]
+    data: List[StudentProgressDetail]
+
+class FeedbackAdminDetail(BaseModel):
+    feedback_id: str
+    user_id: str
+    user_name: Optional[str]
+    course_id: str
+    course_title: str
+    course_rating: str
+    instructor_rating: str
+    review: str
+    display_status: str
+    created_at: datetime
+
+class AllFeedbackAdminResponse(BaseModel):
+    status: bool
+    data: List[FeedbackAdminDetail]
+
+class FeedbackStatusUpdateRequest(BaseModel):
+    display_status: str
+

@@ -9,7 +9,7 @@ from schemas.user import GenderEnum
 from services.AdminService import AdminService
 from schemas.admin import Trainerrequest,trainer_request_get,Trainer_update_request,Trainer_email,CreateCategory,CategoryResponse,AllCategoriesResponse,UpdateCategory,CreateCourseRequest,CourseResponse,CourseDemoResponse,CreateCourseDemoRequest,CreateModuleRequest,CreateModuleResponse,CreateNotesRequest,CreateNotesResponse,CreateVideoRequest,CreateVideoResponse,CreateLiveCourseRequest,CreateLiveCourseResponse,CreateRecVideoRequest,CreateRecVideoResponse,CreateAssessmentRequest,CreateAssessmentResponse,CreateQuestionRequest,CreateQuestionResponse,CreateOptionRequest,CreateOptionResponse,SubCategoryResponse,UpdateCourseRequest,UpdateCourseResponse,UpdateCourseDemoRequest,UpdateCourseDemoResponse,UpdateModuleRequest,UpdateModuleResponse,UpdateNotesRequest,UpdateNotesResponse,UpdateVideoRequest,UpdateVideoResponse,UpdateLiveCourseRequest,UpdateLiveCourseResponse,UpdateRecVideoRequest,UpdateRecVideoResponse,UpdateAssessmentRequest,UpdateAssessmentResponse,UpdateQuestionRequest,UpdateQuestionResponse,UpdateOptionRequest,UpdateOptionResponse,SwapQuestionRequest,SwapOptionRequest,ActivationResponse,SwapModuleRequest
 from typing import Annotated
-from schemas.admin import EnrollmentStatsResponse,CourseStudentsProgressResponse
+from schemas.admin import EnrollmentStatsResponse,CourseStudentsProgressResponse, AllFeedbackAdminResponse, FeedbackStatusUpdateRequest
 from schemas.admin import ResetAssessmentResponse
 from services.ProgressService import ProgressService
 
@@ -590,4 +590,12 @@ async def activate_course(
 @router_admin.get("/enrollment-stats", response_model=EnrollmentStatsResponse, summary="Get Enrollment Statistics", description="Returns the number of students enrolled in each course.")
 async def get_enrollment_stats_api(db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
     return await AdminService().get_enrollment_stats(db)
+
+@router_admin.get("/all-feedback", response_model=AllFeedbackAdminResponse, summary="Get All Feedback for Moderation")
+async def get_all_feedback_api(db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().get_all_feedbacks_for_moderation(db)
+
+@router_admin.put("/feedback/{feedback_id}/status", summary="Update Feedback Display Status")
+async def update_feedback_status_api(feedback_id: str, request: FeedbackStatusUpdateRequest, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().update_feedback_status(feedback_id, request.display_status, db)
 

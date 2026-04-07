@@ -8,7 +8,7 @@ from services.AuthService import user_Authorization
 from services.UserService import UserService
 from schemas.user import UpdateUserProfileRequest,EnrollCourseRequest,EnrollCourseResponse, MarkLiveAttendanceRequest, MarkLiveAttendanceResponse
 from schemas.user import GenderEnum
-from schemas.user import UserProfile_response,update_profile_response
+from schemas.user import UserProfile_response,update_profile_response, SubmitFeedbackRequest, SubmitFeedbackResponse, PublicFeedbackResponse
 from typing import Annotated
 
 router_user = APIRouter()
@@ -115,3 +115,12 @@ async def get_course_progress_api(course_id: str, db: Session = Depends(get_db),
         course_id=course_id,
         db=db
     )
+
+@router_user.post("/course/{course_id}/feedback", response_model=SubmitFeedbackResponse, summary="Submit Course Feedback")
+async def submit_course_feedback_api(course_id: str, request: SubmitFeedbackRequest, db: Session = Depends(get_db), token: dict = Depends(user_Authorization())):
+    user_id = token.get("user_id")
+    return await UserService().submit_course_feedback(user_id, course_id, request, db)
+
+@router_user.get("/public-feedback", response_model=PublicFeedbackResponse, summary="Get Approved Public Feedback")
+async def get_public_feedback_api(db: Session = Depends(get_db)):
+    return await UserService().get_public_feedbacks(db)

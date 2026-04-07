@@ -138,4 +138,30 @@ class CourseProgressResponse(BaseModel):
     completed_modules: int
     progress_percentage: int
     modules_progress: dict[str, str]  # module_id -> status
-    assessments_progress: list[dict]  # array of basic stats
+    assessments_progress: list[dict]  # array of basic stats
+
+from datetime import datetime
+from typing import List
+
+class SubmitFeedbackRequest(BaseModel):
+    Course_rating: str
+    Instructor_rating: str
+    Review: str
+
+class SubmitFeedbackResponse(BaseModel):
+    status: bool
+    message: str
+    feedback_id: str
+
+class FeedbackPublicDetail(BaseModel):
+    user_name: str
+    user_pic: Optional[str]
+    course_title: str
+    course_rating: str
+    review: str
+    created_at: datetime
+
+class PublicFeedbackResponse(BaseModel):
+    status: bool
+    data: List[FeedbackPublicDetail]
+

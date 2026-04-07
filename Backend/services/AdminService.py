@@ -150,6 +150,64 @@ class AdminService:
                 detail=f"Failed to fetch enrollment statistics: {str(e)}"
             )
 
+    async def get_all_feedbacks_for_moderation(self, db: Session):
+        from Models.Feedback_col.Feedback import FeedbackTable
+        from Models.User_Tables.User_Profile import user_profile_table
+        from Models.Course_Tables.course_details import CourseTable
+
+        feedbacks = db.query(
+            FeedbackTable.Feedback_ID,
+            FeedbackTable.User_ID,
+            user_profile_table.user_name,
+            FeedbackTable.Course_ID,
+            CourseTable.course_title,
+            FeedbackTable.Course_rating,
+            FeedbackTable.Instructor_rating,
+            FeedbackTable.Review,
+            FeedbackTable.Disply_Status,
+            FeedbackTable.created_at
+        ).join(
+            user_profile_table, user_profile_table.user_id == FeedbackTable.User_ID
+        ).join(
+            CourseTable, CourseTable.course_id == FeedbackTable.Course_ID
+        ).order_by(FeedbackTable.created_at.desc()).all()
+
+        data = [
+            {
+                "feedback_id": f.Feedback_ID,
+                "user_id": f.User_ID,
+                "user_name": f.user_name,
+                "course_id": f.Course_ID,
+                "course_title": f.course_title,
+                "course_rating": f.Course_rating,
+                "instructor_rating": f.Instructor_rating,
+                "review": f.Review,
+                "display_status": f.Disply_Status,
+                "created_at": f.created_at
+            }
+            for f in feedbacks
+        ]
+
+        return {
+            "status": True,
+            "data": data
+        }
+
+    async def update_feedback_status(self, feedback_id: str, display_status: str, db: Session):
+        from Models.Feedback_col.Feedback import FeedbackTable
+
+        feedback = db.query(FeedbackTable).filter(FeedbackTable.Feedback_ID == feedback_id).first()
+        if not feedback:
+            raise HTTPException(status_code=404, detail="Feedback not found")
+
+        feedback.Disply_Status = display_status
+        db.commit()
+
+        return {
+            "status": True,
+            "message": f"Feedback status updated to {display_status} successfully"
+        }
+
     async def get_trainer_profile(self, Data, token: dict, db: Session):
         try:
             trainer = db.query(user_profile_table).filter(

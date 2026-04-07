@@ -202,3 +202,83 @@ class UserService:
             "message": message,
             "is_present": attendance.Is_Present
         }
+
+    async def submit_course_feedback(self, user_id: str, course_id: str, feedback_data, db: Session):
+        # 1. Check if course is completed
+        from Models.Progress.CourseProgressTable import CourseProgressTable
+        from Models.Feedback_col.Feedback import FeedbackTable
+        import uuid
+
+        progress = db.query(CourseProgressTable).filter(
+            CourseProgressTable.User_ID == user_id,
+            CourseProgressTable.Course_ID == course_id
+        ).first()
+
+        if not progress or progress.Progress_Percentage < 100:
+             raise HTTPException(status_code=400, detail="You must complete 100% of the course before providing feedback.")
+
+        # 2. Check if feedback already exists
+        existing = db.query(FeedbackTable).filter(
+            FeedbackTable.User_ID == user_id,
+            FeedbackTable.Course_ID == course_id
+        ).first()
+
+        if existing:
+            raise HTTPException(status_code=400, detail="You have already provided feedback for this course.")
+
+        # 3. Save feedback
+        new_feedback = FeedbackTable(
+            Feedback_ID = f"FEEDBACK-{uuid.uuid4().hex[:8]}",
+            User_ID = user_id,
+            Course_ID = course_id,
+            Course_rating = feedback_data.Course_rating,
+            Instructor_rating = feedback_data.Instructor_rating,
+            Review = feedback_data.Review,
+            Disply_Status = "Pending"
+        )
+        
+        db.add(new_feedback)
+        db.commit()
+
+        return {
+            "status": True,
+            "message": "Feedback submitted successfully. It will be visible once approved by Admin.",
+            "feedback_id": new_feedback.Feedback_ID
+        }
+
+    async def get_public_feedbacks(self, db: Session):
+        from Models.Feedback_col.Feedback import FeedbackTable
+        from Models.User_Tables.User_Profile import user_profile_table
+        from Models.Course_Tables.course_details import CourseTable
+
+        feedbacks = db.query(
+            user_profile_table.user_name,
+            user_profile_table.user_pic,
+            CourseTable.course_title,
+            FeedbackTable.Course_rating,
+            FeedbackTable.Review,
+            FeedbackTable.created_at
+        ).join(
+            user_profile_table, user_profile_table.user_id == FeedbackTable.User_ID
+        ).join(
+            CourseTable, CourseTable.course_id == FeedbackTable.Course_ID
+        ).filter(
+            FeedbackTable.Disply_Status == "Approved"
+        ).order_by(FeedbackTable.created_at.desc()).all()
+
+        data = [
+            {
+                "user_name": f.user_name,
+                "user_pic": f.user_pic,
+                "course_title": f.course_title,
+                "course_rating": f.Course_rating,
+                "review": f.Review,
+                "created_at": f.created_at
+            }
+            for f in feedbacks
+        ]
+
+        return {
+            "status": True,
+            "data": data
+        }
