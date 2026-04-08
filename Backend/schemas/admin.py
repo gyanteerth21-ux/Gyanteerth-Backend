@@ -879,6 +879,7 @@ class EnrollmentStatsResponse(BaseModel):
 class StudentProgressDetail(BaseModel):
     user_id: str
     user_name: Optional[str]
+    email: Optional[str]
     progress_percentage: int
     completed_modules: int
     total_modules: int
