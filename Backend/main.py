@@ -26,6 +26,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://localhost:3000",
         "https://lms-vert-alpha.vercel.app",
+        "https://main.d32uqnjfa8len3.amplifyapp.com",
         "https://gyanteerth.vercel.app"
     ],  
     allow_credentials=True,
