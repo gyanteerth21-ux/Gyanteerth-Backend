@@ -24,7 +24,6 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "http://localhost:3000",
         "https://lms-vert-alpha.vercel.app",
         "https://main.d32uqnjfa8len3.amplifyapp.com",
         "https://main.d32uqnjfa8len3.amplifyapp.com/",

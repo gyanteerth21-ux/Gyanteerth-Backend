@@ -23,7 +23,7 @@ engine = create_engine(
     connect_args={
         "connect_timeout": 10,    # fail fast instead of hanging
         "gssencmode": "disable",  # prevents IPv6/GSSAPI negotiation that fails on Vercel
-        "sslmode": "require",     # Supabase requires SSL
+        "sslmode": "prefer",     # 'prefer' works for both Supabase (SSL) and local DB (none)
     },
 )
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
