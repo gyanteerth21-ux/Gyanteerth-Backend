@@ -282,3 +282,52 @@ class UserService:
             "status": True,
             "data": data
         }
+
+    async def get_certificate_details(self, user_id: str, course_id: str, db: Session):
+        from Models.Progress.CourseProgressTable import CourseProgressTable
+        from Models.Certificate_Table.Certificate_table import CertificateTable
+        import random
+
+        # 1. Check if course progress is 100%
+        progress = db.query(CourseProgressTable).filter(
+            CourseProgressTable.User_ID == user_id,
+            CourseProgressTable.Course_ID == course_id
+        ).first()
+
+        if not progress or progress.Progress_Percentage < 100:
+            raise HTTPException(status_code=400, detail="You must complete 100% of the course to get the certificate.")
+
+        # 2. Fetch User and Course details
+        user = db.query(user_profile_table).filter(user_profile_table.user_id == user_id).first()
+        course = db.query(CourseTable).filter(CourseTable.course_id == course_id).first()
+
+        if not user or not course:
+            raise HTTPException(status_code=404, detail="User or Course not found.")
+
+        # 3. Check for existing certificate
+        certificate = db.query(CertificateTable).filter(
+            CertificateTable.User_ID == user_id,
+            CertificateTable.Course_ID == course_id
+        ).first()
+
+        if not certificate:
+            certificate = CertificateTable(
+                Certificate_ID=str(uuid.uuid4()),
+                User_ID=user_id,
+                Course_ID=course_id,
+                certificate_number=random.randint(100000, 999999), 
+                Verification_code=random.randint(1000, 9999),
+                Certificate_url="",
+                Issued_at=datetime.utcnow()
+            )
+            db.add(certificate)
+            db.commit()
+            db.refresh(certificate)
+
+        return {
+            "uuid": certificate.Certificate_ID,
+            "course_name": course.course_title,
+            "course_duration": course.duration,
+            "user_name": user.user_name,
+            "issued_date": certificate.Issued_at
+        }

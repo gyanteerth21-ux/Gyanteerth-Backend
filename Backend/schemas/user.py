@@ -164,4 +164,12 @@ class FeedbackPublicDetail(BaseModel):
 class PublicFeedbackResponse(BaseModel):
     status: bool
     data: List[FeedbackPublicDetail]
+
+class CertificateDetailsResponse(BaseModel):
+    uuid: str
+    course_name: str
+    course_duration: str
+    user_name: str
+    issued_date: datetime
+
 
