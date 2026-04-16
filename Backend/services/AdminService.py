@@ -226,7 +226,8 @@ class AdminService:
                 "user_gender": trainer.user_gender,
                 "user_city": trainer.user_city,
                 "user_state": trainer.user_state,
-                "email_verified": trainer.user_email_verified
+                "email_verified": trainer.user_email_verified,
+                "Status": trainer.Status
             }
     
         except HTTPException as http_err:

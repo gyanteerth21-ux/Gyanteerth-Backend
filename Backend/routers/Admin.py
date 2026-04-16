@@ -48,9 +48,11 @@ async def create_trainer(
             detail= str(e)
         )
 
-@router_admin.post("/get_trainer",summary="Get Trainer Profile",
+@router_admin.get("/get_trainer",summary="Get Trainer Profile",
     description="Retrieves the profile information of the authenticated trainer.")
-async def get_trainer(Data:trainer_request_get,db: Session = Depends(get_db),token: object = Depends(admin_Authorization())):
+async def get_trainer(trainer_email: str = Query(..., example="trainer@gmail.com"), db: Session = Depends(get_db), token: object = Depends(admin_Authorization())):
+    from schemas.admin import trainer_request_get
+    Data = trainer_request_get(trainer_email=trainer_email)
     return await AdminService().get_trainer_profile(Data,token, db)
 
 @router_admin.get("/all_trainer",summary="all Trainer email",
