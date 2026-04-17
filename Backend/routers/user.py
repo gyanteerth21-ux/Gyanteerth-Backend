@@ -131,10 +131,15 @@ async def submit_course_feedback_api(course_id: str, request: SubmitFeedbackRequ
 async def get_public_feedback_api(db: Session = Depends(get_db)):
     return await UserService().get_public_feedbacks(db)
 
-from schemas.user import CertificateDetailsResponse
+from schemas.user import CertificateDetailsResponse, CertificateVerifyResponse
 
 @router_user.get("/course/{course_id}/certificate", response_model=CertificateDetailsResponse, summary="Get Certificate Details")
 async def get_certificate_details_api(course_id: str, db: Session = Depends(get_db), token: dict = Depends(user_Authorization())):
     user_id = token.get("user_id")
     return await UserService().get_certificate_details(user_id=user_id, course_id=course_id, db=db)
+
+@router_user.get("/certificate/{certificate_id}/verify", response_model=CertificateVerifyResponse, summary="Verify Certificate")
+async def verify_certificate_api(certificate_id: str, db: Session = Depends(get_db)):
+    return await UserService().verify_certificate(certificate_id=certificate_id, db=db)
+
 

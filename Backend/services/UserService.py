@@ -331,3 +331,32 @@ class UserService:
             "user_name": user.user_name,
             "issued_date": certificate.Issued_at
         }
+
+    async def verify_certificate(self, certificate_id: str, db: Session):
+        from Models.Certificate_Table.Certificate_table import CertificateTable
+
+        certificate = db.query(CertificateTable).filter(
+            CertificateTable.Certificate_ID == certificate_id
+        ).first()
+
+        if not certificate:
+            return {
+                "is_valid": False,
+                "data": None
+            }
+
+        # Fetch extra details for the valid response
+        user = db.query(user_profile_table).filter(user_profile_table.user_id == certificate.User_ID).first()
+        course = db.query(CourseTable).filter(CourseTable.course_id == certificate.Course_ID).first()
+
+        return {
+            "is_valid": True,
+            "data": {
+                "uuid": certificate.Certificate_ID,
+                "course_name": course.course_title if course else "Unknown Course",
+                "course_duration": course.duration if course else "N/A",
+                "user_name": user.user_name if user else "Unknown Student",
+                "issued_date": certificate.Issued_at
+            }
+        }
+

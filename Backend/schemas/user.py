@@ -172,4 +172,9 @@ class CertificateDetailsResponse(BaseModel):
     user_name: str
     issued_date: datetime
 
+class CertificateVerifyResponse(BaseModel):
+    is_valid: bool
+    data: Optional[CertificateDetailsResponse] = None
+
+
 
