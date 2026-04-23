@@ -38,7 +38,7 @@ async def verify_otp(data: OTPVerificationRequest, db: Session = Depends(get_db)
 
 @router_auth.delete("/delete_user_profile_after_verified_add_complete_pass",response_model=uncomplete_passResponse,summary="Delete User Profile After Verified not add complete pass",
     description="Deletes the user profile after successful OTP verification without setting the password.")
-async def delete_user_profile_after_verified_add_complete_pass(user_id: Annotated[str,Path(example="user-abcd-efgh")], db: Session = Depends(get_db)):
+async def delete_user_profile_after_verified_add_complete_pass(user_id: Annotated[str,Path(examples=["user-abcd-efgh"])], db: Session = Depends(get_db)):
     return await AuthService().delete_user_profile_service(user_id, db)
 
 @router_auth.post("/set_password",response_model=set_passwordResponse,summary="Set Password",

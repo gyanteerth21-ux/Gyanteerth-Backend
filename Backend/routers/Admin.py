@@ -50,7 +50,7 @@ async def create_trainer(
 
 @router_admin.get("/get_trainer",summary="Get Trainer Profile",
     description="Retrieves the profile information of the authenticated trainer.")
-async def get_trainer(trainer_email: str = Query(..., example="trainer@gmail.com"), db: Session = Depends(get_db), token: object = Depends(admin_Authorization())):
+async def get_trainer(trainer_email: str = Query(..., examples=["trainer@gmail.com"]), db: Session = Depends(get_db), token: object = Depends(admin_Authorization())):
     from schemas.admin import trainer_request_get
     Data = trainer_request_get(trainer_email=trainer_email)
     return await AdminService().get_trainer_profile(Data,token, db)
@@ -100,7 +100,7 @@ async def delete_category(category_id: str,db: Session = Depends(get_db),token: 
 """
 
 @router_admin.post("/create_course", response_model=CourseResponse,summary="Create a new course",description="""This allows an admin to create a new course in the LMS.""")
-async def create_course(data: CreateCourseRequest,instructor_id: str = Query(...,example="USER-12345",description="Unique ID of the instructor assigned to the course"),background_tasks: BackgroundTasks = BackgroundTasks(),db: Session = Depends(get_db),token: dict = Depends(admin_Authorization())):
+async def create_course(data: CreateCourseRequest,instructor_id: str = Query(...,examples=["USER-12345"],description="Unique ID of the instructor assigned to the course"),background_tasks: BackgroundTasks = BackgroundTasks(),db: Session = Depends(get_db),token: dict = Depends(admin_Authorization())):
     return await AdminService().create_course(data, instructor_id, db,background_tasks,token)
 
 @router_admin.post("/add_course_demo",response_model=CourseDemoResponse,summary="Add course demo",description="This API allows admin or instructor to add a demo video for a course.")
@@ -140,7 +140,7 @@ async def create_option(data: CreateOptionRequest,db: Session = Depends(get_db),
     return await AdminService().create_option_service(data, db)
 
 @router_admin.put("/update_course/{course_id}",response_model=UpdateCourseResponse,summary="Update Course",description="Update an existing course")
-async def update_course(course_id: str,data: UpdateCourseRequest,instructor_id: str = Query(..., example="USER-12345"),db: Session = Depends(get_db),token: dict = Depends(admin_Authorization())):
+async def update_course(course_id: str,data: UpdateCourseRequest,instructor_id: str = Query(..., examples=["USER-12345"]),db: Session = Depends(get_db),token: dict = Depends(admin_Authorization())):
     return await AdminService().update_course(course_id,data,instructor_id,db,token)
 
 @router_admin.put("/update_course_demo/{demo_id}",response_model=UpdateCourseDemoResponse,summary="Update course demo",description="Update demo video for a course")

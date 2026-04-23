@@ -25,12 +25,12 @@ async def get_profile(db: Session = Depends(get_db),token: object = Depends(user
     description="Updates the profile information of the authenticated user."
 )
 async def update_profile(
-    user_name: Annotated[str, Form(..., example="ArulJayaraj")],
-    user_number: Annotated[int, Form(..., example=1234567890)],
-    user_dob: Annotated[date, Form(..., example="1990-01-01")],
-    user_gender: Annotated[GenderEnum, Form(..., example="male")],
-    user_city: Annotated[str, Form(..., example="New York")],
-    user_state: Annotated[str, Form(..., example="NY")],
+    user_name: Annotated[str, Form(..., examples=["ArulJayaraj"])],
+    user_number: Annotated[int, Form(..., examples=[1234567890])],
+    user_dob: Annotated[date, Form(..., examples=["1990-01-01"])],
+    user_gender: Annotated[GenderEnum, Form(..., examples=["male"])],
+    user_city: Annotated[str, Form(..., examples=["New York"])],
+    user_state: Annotated[str, Form(..., examples=["NY"])],
     user_pic: UploadFile | None = File(None),
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db),

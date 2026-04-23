@@ -171,7 +171,7 @@ class CreateCourseRequest(BaseModel):
     discount_pay: int
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "category_id": "CAT-001",
                 "course_Type":"Live",
@@ -195,7 +195,7 @@ class CourseResponse(BaseModel):
     course_id: str
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "status": True,
                 "message": "Course created successfully",
@@ -210,7 +210,7 @@ class CreateCourseDemoRequest(BaseModel):
     duration: str
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "course_id": "COURSE-12345",
                 "title": "Course Introduction",
@@ -225,7 +225,7 @@ class CourseDemoResponse(BaseModel):
     demo_id: str
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "status": True,
                 "message": "Course demo added successfully",
@@ -240,7 +240,7 @@ class CreateModuleRequest(BaseModel):
     Position: int 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Course_ID": "COURSE-12345",
                 "Title": "Introduction to Python",
@@ -258,7 +258,7 @@ class CreateModuleResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CreateNotesRequest(BaseModel):
@@ -268,7 +268,7 @@ class CreateNotesRequest(BaseModel):
     File_Type: str 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Course_ID": "COURSE-1001",
                 "Title": "Python Variables Notes",
@@ -286,7 +286,7 @@ class CreateNotesResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
     
 class CreateVideoRequest(BaseModel):
 
@@ -296,7 +296,7 @@ class CreateVideoRequest(BaseModel):
     course_description: str
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Course_ID": "COURSE-1001",
                 "Module_ID": "MODULE-2001",
@@ -315,7 +315,7 @@ class CreateVideoResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CreateLiveCourseRequest(BaseModel):
 
@@ -327,7 +327,7 @@ class CreateLiveCourseRequest(BaseModel):
     Status: str
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Course_ID": "COURSE-1001",
                 "Module_ID": "MODULE-2001",
@@ -351,7 +351,7 @@ class CreateLiveCourseResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CreateRecVideoRequest(BaseModel):
 
@@ -361,7 +361,7 @@ class CreateRecVideoRequest(BaseModel):
     Duration: str 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Course_ID": "COURSE-1001",
                 "Live_ID": "LIVE-2001",
@@ -380,7 +380,7 @@ class CreateRecVideoResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CreateAssessmentRequest(BaseModel):
 
@@ -397,7 +397,7 @@ class CreateAssessmentRequest(BaseModel):
     Status: str 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Module_ID": "MODULE-2001",
                 "Title": "Python Basics Test",
@@ -424,7 +424,7 @@ class CreateAssessmentResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CreateQuestionRequest(BaseModel):
 
@@ -436,7 +436,7 @@ class CreateQuestionRequest(BaseModel):
     Position: int 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Assessment_ID": "ASSESS-1001",
                 "Question_Txt": "What is Python?",
@@ -459,7 +459,7 @@ class CreateQuestionResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CreateOptionRequest(BaseModel):
 
@@ -469,7 +469,7 @@ class CreateOptionRequest(BaseModel):
     Position: int 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Question_ID": "QUES-1001",
                 "Option_Txt": "Python is a programming language",
@@ -488,7 +488,7 @@ class CreateOptionResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UpdateCourseRequest(BaseModel):
@@ -507,7 +507,7 @@ class UpdateCourseRequest(BaseModel):
     discount_pay: float 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "category_id": "CAT-1001",
                 "course_Type": "Recorded",
@@ -536,8 +536,8 @@ class UpdateCourseResponse(BaseModel):
     course_id: str
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "status": True,
                 "message": "Course updated successfully",
@@ -552,7 +552,7 @@ class UpdateCourseDemoRequest(BaseModel):
     duration: str 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "title": "Python Course Introduction",
                 "video_url": "https://cdn.example.com/demo/python-intro.mp4",
@@ -567,8 +567,8 @@ class UpdateCourseDemoResponse(BaseModel):
     demo_id: str
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "status": True,
                 "message": "Course demo updated successfully",
@@ -582,7 +582,7 @@ class UpdateModuleRequest(BaseModel):
     Course_Description: str
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Title": "Introduction to Python",
                 "Course_Description": "This module covers Python basics"
@@ -596,8 +596,8 @@ class UpdateModuleResponse(BaseModel):
     module_id: str
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "status": True,
                 "message": "Module updated successfully",
@@ -612,7 +612,7 @@ class UpdateNotesRequest(BaseModel):
     File_Type: str
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Title": "Python Variables Notes",
                 "File_URL": "https://cdn.example.com/python_variables.pdf",
@@ -627,8 +627,8 @@ class UpdateNotesResponse(BaseModel):
     notes_id: str
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "status": True,
                 "message": "Notes updated successfully",
@@ -644,7 +644,7 @@ class UpdateVideoRequest(BaseModel):
     course_description: str 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Module_ID": "MODULE-12345",
                 "Course_ID": "COURSE-12345",
@@ -660,8 +660,8 @@ class UpdateVideoResponse(BaseModel):
     video_id: str
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "status": True,
                 "message": "Video updated successfully",
@@ -680,7 +680,7 @@ class UpdateLiveCourseRequest(BaseModel):
     Status: str 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Course_ID": "COURSE-12345",
                 "Module_ID": "MODULE-12345",
@@ -699,8 +699,8 @@ class UpdateLiveCourseResponse(BaseModel):
     live_id: str
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "status": True,
                 "message": "Live session updated successfully",
@@ -716,7 +716,7 @@ class UpdateRecVideoRequest(BaseModel):
     Duration: str 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Course_ID": "COURSE-12345",
                 "Live_ID": "LIVE-12345",
@@ -732,8 +732,8 @@ class UpdateRecVideoResponse(BaseModel):
     rec_video_id: str
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "status": True,
                 "message": "Recorded video updated successfully",
@@ -753,7 +753,7 @@ class UpdateAssessmentRequest(BaseModel):
     Status: str 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Module_ID": "MODULE-12345",
                 "Title": "Python Basics Test",
@@ -773,8 +773,8 @@ class UpdateAssessmentResponse(BaseModel):
     assessment_id: str
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "status": True,
                 "message": "Assessment updated successfully",
@@ -792,7 +792,7 @@ class UpdateQuestionRequest(BaseModel):
 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Assessment_ID": "ASSESS-12345",
                 "Question_Txt": "What is Python?",
@@ -809,8 +809,8 @@ class UpdateQuestionResponse(BaseModel):
     question_id: str
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "status": True,
                 "message": "Question updated successfully",
@@ -825,7 +825,7 @@ class UpdateOptionRequest(BaseModel):
     Is_Correct: bool 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "Question_ID": "QUES-12345",
                 "Option_Txt": "Python is a programming language",
@@ -840,8 +840,8 @@ class UpdateOptionResponse(BaseModel):
     option_id: str
 
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "status": True,
                 "message": "Option updated successfully",
