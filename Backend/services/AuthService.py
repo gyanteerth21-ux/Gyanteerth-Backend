@@ -197,6 +197,11 @@ class AuthService:
         client_ip = request.headers.get("x-forwarded-for", "Unknown")
         if client_ip == "Unknown" and request.client:
             client_ip = request.client.host
+            
+        if client_ip:
+            client_ip = client_ip.split(",")[0].strip()[:50]
+        else:
+            client_ip = "Unknown"
 
         re_refresh_token = create_refresh_token(user.user_id)
         

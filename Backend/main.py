@@ -18,6 +18,25 @@ import time
 from Database.DB import query_times
 
 app = FastAPI()
+
+@app.on_event("startup")
+def startup_db_sync():
+    from Database.DB import engine
+    from sqlalchemy import text
+    from Models.Progress.AssessmentAnswerTable import AssessmentAnswerTable
+    
+    try:
+        with engine.connect() as conn:
+            # Safely add the user_college column if it doesn't exist
+            conn.execute(text("ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS user_college VARCHAR(150);"))
+            conn.commit()
+            
+        # Ensure new tables like AssessmentAnswerTable are created
+        AssessmentAnswerTable.metadata.create_all(bind=engine)
+        print("Database sync completed successfully on startup.")
+    except Exception as e:
+        print(f"Database sync skipped/failed: {str(e)}")
+
 app.add_middleware(SessionMiddleware, secret_key="your_super_secret_key_here")
 app.add_middleware(
     CORSMiddleware,
