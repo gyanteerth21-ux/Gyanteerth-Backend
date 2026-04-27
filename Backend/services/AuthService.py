@@ -194,17 +194,37 @@ class AuthService:
         elif "Mac" in user_agent:
             device_name = "Mac"
     
+        client_ip = request.headers.get("x-forwarded-for", "Unknown")
+        if client_ip == "Unknown" and request.client:
+            client_ip = request.client.host
+
         re_refresh_token = create_refresh_token(user.user_id)
-        db.query(user_refresh_token_table).filter(
+        
+        # Check if refresh token record exists, if not create one
+        token_record = db.query(user_refresh_token_table).filter(
             user_refresh_token_table.user_id == user.user_id
-        ).update({
-            "refresh_token": re_refresh_token,
-            "ip_address": request.client.host,
-            "user_agent": user_agent,
-            "device_name": device_name,
-            "expires_at": datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
-            "is_revoked": False
-        })
+        ).first()
+
+        if token_record:
+            token_record.refresh_token = re_refresh_token
+            token_record.ip_address = client_ip
+            token_record.user_agent = user_agent
+            token_record.device_name = device_name
+            token_record.expires_at = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+            token_record.is_revoked = False
+        else:
+            new_token_record = user_refresh_token_table(
+                refresh_token_id=f"RefreshToken-{uuid.uuid4()}",
+                user_id=user.user_id,
+                refresh_token=re_refresh_token,
+                ip_address=client_ip,
+                user_agent=user_agent,
+                device_name=device_name,
+                expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+                is_revoked=False
+            )
+            db.add(new_token_record)
+
         db.commit()
         return {
             "success": True,
