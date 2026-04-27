@@ -71,32 +71,50 @@ class ProgressService:
 
         # 3. Calculate score
         score = 0
+        answer_records = []
         for q_id, o_id in answers.items():
             correct_opt = db.query(optionTable).filter(
                 optionTable.Question_ID == q_id,
                 optionTable.Is_Correct == True
             ).first()
+            
+            is_correct = False
             if correct_opt and correct_opt.Option_ID == o_id:
+                is_correct = True
                 # Add marks for this question
                 question = db.query(QuestionTable).filter(QuestionTable.Question_ID == q_id).first()
                 if question:
                     score += question.Mark
 
+            answer_records.append({
+                "Question_ID": q_id,
+                "Option_ID": o_id,
+                "Is_Correct": is_correct
+            })
+
         passed = score >= assessment.Passing_Mark
         new_status = "Passed" if passed else "Failed"
 
         # 4. Save attempt
+        from Models.Progress.AssessmentAnswerTable import AssessmentAnswerTable
+        should_save_answers = False
+        target_attempt_id = None
+
         if attempt:
+            target_attempt_id = attempt.Attempt_ID
             # We ONLY update if the new score is higher OR if they passed, keep best score
             if score > attempt.Score:
                 attempt.Score = score
+                should_save_answers = True
+                
             attempt.Attempt_No = attempt_no
             if passed:
                 attempt.Status = new_status
             attempt.Completed_At = datetime.utcnow()
         else:
+            target_attempt_id = f"ATTEMPT-{uuid.uuid4().hex[:8]}"
             new_attempt = AssessmentAttemptTable(
-                Attempt_ID=f"ATTEMPT-{uuid.uuid4().hex[:8]}",
+                Attempt_ID=target_attempt_id,
                 User_ID=user_id,
                 Assessment_ID=assessment_id,
                 Module_ID=module_id,
@@ -106,6 +124,20 @@ class ProgressService:
                 Completed_At=datetime.utcnow()
             )
             db.add(new_attempt)
+            should_save_answers = True
+
+        if should_save_answers:
+            db.query(AssessmentAnswerTable).filter(AssessmentAnswerTable.Attempt_ID == target_attempt_id).delete()
+            for ans in answer_records:
+                new_ans = AssessmentAnswerTable(
+                    Answer_ID=f"ANS-{uuid.uuid4().hex[:8]}",
+                    Attempt_ID=target_attempt_id,
+                    Question_ID=ans["Question_ID"],
+                    Option_ID=ans["Option_ID"],
+                    Is_Correct=ans["Is_Correct"],
+                    created_at=datetime.utcnow()
+                )
+                db.add(new_ans)
 
         db.commit()
 

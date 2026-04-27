@@ -184,12 +184,66 @@ class TrainerService:
         results = await self.get_assessment_results(token, from_date, to_date, course_id, db)
         data = results.get("data", [])
 
-        df = pd.DataFrame(data)
-        if not df.empty:
-            df.columns = ["Attempt ID", "Student Name", "Student Email", "Course Name", 
-                          "Assessment Title", "Score", "Attempt No", "Status", "Start Time", "End Time"]
+        if not data:
+            df = pd.DataFrame()
+            buffer = io.BytesIO()
+            with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False, sheet_name="Results")
+            buffer.seek(0)
+            headers = {'Content-Disposition': 'attachment; filename="assessment_results.xlsx"'}
+            return StreamingResponse(buffer, headers=headers, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-            for col in ["Start Time", "End Time"]:
+        attempt_ids = [r["attempt_id"] for r in data]
+        
+        from Models.Progress.AssessmentAnswerTable import AssessmentAnswerTable
+        from Models.Assessment_Tables.Question_table import QuestionTable
+        from Models.Assessment_Tables.Options_table import optionTable
+        
+        answers = db.query(
+            AssessmentAnswerTable.Attempt_ID,
+            QuestionTable.Question_Txt,
+            optionTable.Option_Txt
+        ).join(
+            QuestionTable, QuestionTable.Question_ID == AssessmentAnswerTable.Question_ID
+        ).join(
+            optionTable, optionTable.Option_ID == AssessmentAnswerTable.Option_ID
+        ).filter(
+            AssessmentAnswerTable.Attempt_ID.in_(attempt_ids)
+        ).all()
+
+        attempt_answers = {}
+        for ans in answers:
+            att_id = ans.Attempt_ID
+            q_txt = f"Q: {ans.Question_Txt}"
+            opt_txt = ans.Option_Txt
+            if att_id not in attempt_answers:
+                attempt_answers[att_id] = {}
+            attempt_answers[att_id][q_txt] = opt_txt
+
+        expanded_data = []
+        for row in data:
+            att_id = row["attempt_id"]
+            new_row = {
+                "Attempt ID": att_id,
+                "Student Name": row["student_name"],
+                "Student Email": row["student_email"],
+                "Course Name": row["course_name"],
+                "Assessment Title": row["assessment_title"],
+                "Score": row["score"],
+                "Attempt No": row["attempt_no"],
+                "Status": row["status"],
+                "Start Time": row["start_time"],
+                "End Time": row["end_time"]
+            }
+            if att_id in attempt_answers:
+                new_row.update(attempt_answers[att_id])
+            
+            expanded_data.append(new_row)
+
+        df = pd.DataFrame(expanded_data)
+        
+        for col in ["Start Time", "End Time"]:
+            if col in df.columns:
                 df[col] = pd.to_datetime(df[col]).dt.tz_localize(None)
 
         buffer = io.BytesIO()
