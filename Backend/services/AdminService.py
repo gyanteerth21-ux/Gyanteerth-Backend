@@ -1111,6 +1111,7 @@ class AdminService:
             slug = data.course_title.lower().replace(" ", "-")
             course.instructor_id = instructor_id
             course.category_id = data.category_id
+            course.course_Type = data.course_Type
             course.course_title = data.course_title
             course.course_description = data.course_description
             course.slug = slug
