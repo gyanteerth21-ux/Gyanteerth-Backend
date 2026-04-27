@@ -18,3 +18,23 @@ async def get_trainer_course_ids(
 @router_trainer.get("/course/{course_id}/students-progress", response_model=CourseStudentsProgressResponse, summary="Get Course Students Progress", description="Returns detailed progress for all students enrolled in a specific course.")
 async def get_course_students_progress_api(course_id: str, db: Session = Depends(get_db), token: dict = Depends(trainer_Authorization())):
     return await TrainerService().get_course_students_progress(course_id, db, token)
+
+@router_trainer.get("/assessment_results", summary="Get Assessment Results")
+async def get_assessment_results(
+    from_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
+    to_date: str = Query(None, description="End date (YYYY-MM-DD)"),
+    course_id: str = Query(None, description="Filter by Course ID"),
+    db: Session = Depends(get_db),
+    token: object = Depends(trainer_Authorization())
+):
+    return await TrainerService().get_assessment_results(token, from_date, to_date, course_id, db)
+
+@router_trainer.get("/export_assessment_results", summary="Export Assessment Results to Excel")
+async def export_assessment_results(
+    from_date: str = Query(None, description="Start date (YYYY-MM-DD)"),
+    to_date: str = Query(None, description="End date (YYYY-MM-DD)"),
+    course_id: str = Query(None, description="Filter by Course ID"),
+    db: Session = Depends(get_db),
+    token: object = Depends(trainer_Authorization())
+):
+    return await TrainerService().export_assessment_results(token, from_date, to_date, course_id, db)

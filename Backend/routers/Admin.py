@@ -15,6 +15,27 @@ from services.ProgressService import ProgressService
 
 router_admin= APIRouter()
 
+@router_admin.post("/bulk_create_users",
+    summary="Bulk Create Users/Trainers",
+    description="Upload an Excel file to bulk create students and trainers.")
+async def bulk_create_users(
+    file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db),
+    token: object = Depends(admin_Authorization())
+):
+    return await AdminService().bulk_create_users_service(file, background_tasks, token, db)
+
+@router_admin.post("/bulk_upload_questions/{assessment_id}",
+    summary="Bulk Upload Questions",
+    description="Upload an Excel file to bulk create questions and options for an assessment.")
+async def bulk_upload_questions(
+    assessment_id: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    token: object = Depends(admin_Authorization())
+):
+    return await AdminService().bulk_upload_questions_service(assessment_id, file, db)
 @router_admin.post("/create_trainer",
 summary="Create Trainer Profile",
 description="Creates a trainer profile with the provided information.")

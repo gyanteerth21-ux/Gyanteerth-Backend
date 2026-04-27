@@ -26,25 +26,7 @@ async def read(token: object = Depends(admin_Authorization())):
 async def read(token: object = Depends(trainer_Authorization())):
     return token
 
-@router_auth.post("/signup_credentials",response_model=SignupResponse,summary="Check email and send OTP",
-    description="Checks whether the email exists and sends an OTP for verification.")
-async def signup_credentials(data: SignupEmailRequest, db: Session = Depends(get_db)):
-    return await AuthService().check_email(data, db)
 
-@router_auth.post("/verify_otp",response_model=verify_otpResponse,summary="Verify OTP",
-    description="Verifies the OTP for the given user.")
-async def verify_otp(data: OTPVerificationRequest, db: Session = Depends(get_db)):
-    return await AuthService().verify_otp_service(data, db)
-
-@router_auth.delete("/delete_user_profile_after_verified_add_complete_pass",response_model=uncomplete_passResponse,summary="Delete User Profile After Verified not add complete pass",
-    description="Deletes the user profile after successful OTP verification without setting the password.")
-async def delete_user_profile_after_verified_add_complete_pass(user_id: Annotated[str,Path(examples=["user-abcd-efgh"])], db: Session = Depends(get_db)):
-    return await AuthService().delete_user_profile_service(user_id, db)
-
-@router_auth.post("/set_password",response_model=set_passwordResponse,summary="Set Password",
-    description="Sets the password for the user after successful OTP verification.")
-async def set_password(data: passwordrequest, request: Request, db: Session = Depends(get_db)):
-    return await AuthService().set_password_service(data, request, db)
 
 @router_auth.post("/new_access_token",response_model = refresh_token_response,summary="Generate New Access Token",
     description="Generates a new access token using the refresh token.")
@@ -65,8 +47,4 @@ async def forget_password(data: SignupEmailRequest, db: Session = Depends(get_db
     description="Updates the user's password.")
 async def update_password(data: update_password_request, db: Session = Depends(get_db)):
     return await AuthService().update_password_service(data, db)
-
-@router_auth.post("/google-signup",summary="Google Signup",
-    description="Signs up a new user via Google.")
-async def google_signup(data: dict,db:Session = Depends(get_db)):
-    return await AuthService().google_signup_service(data, db)
+
