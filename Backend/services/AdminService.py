@@ -2453,8 +2453,8 @@ class AdminService:
             # Read the uploaded Excel file
             df = pd.read_excel(file.file)
             
-            # Expected columns: Name, Email, Number, DOB, Gender, City, State, Role
-            required_cols = ['Name', 'Email', 'Role']
+            # Expected columns: Name, Email, Number, DOB, Gender, City, State, College_Name
+            required_cols = ['Name', 'Email']
             for col in required_cols:
                 if col not in df.columns:
                     return {"success": False, "message": f"Missing required column: {col}"}
@@ -2467,14 +2467,9 @@ class AdminService:
                 try:
                     email = str(row['Email']).strip()
                     name = str(row['Name']).strip()
-                    role = str(row['Role']).strip().lower()
+                    role = 'user'
 
                     if pd.isna(email) or not email or str(email) == 'nan':
-                        continue
-
-                    if role not in ['user', 'trainer']:
-                        failed_count += 1
-                        failed_reasons.append({"email": email, "reason": "Invalid Role (must be user or trainer)"})
                         continue
 
                     # Check if email exists
@@ -2508,6 +2503,8 @@ class AdminService:
                     if pd.isna(city): city = None
                     state = row.get('State', None)
                     if pd.isna(state): state = None
+                    college_name = row.get('College_Name', None)
+                    if pd.isna(college_name): college_name = None
 
                     user_id = f"USER-{uuid.uuid4()}"
                     
@@ -2521,6 +2518,7 @@ class AdminService:
                         user_gender=gender,
                         user_city=city,
                         user_state=state,
+                        user_college=college_name,
                         user_email_verified=True,
                         Status="Active"
                     )
@@ -2576,6 +2574,137 @@ class AdminService:
             raise HTTPException(
                 status_code=500,
                 detail=f"An error occurred while processing the bulk upload: {str(e)}"
+            )
+
+    async def bulk_create_trainers_service(self, file: UploadFile, background_tasks, token: dict, db: Session):
+        import pandas as pd
+        import string
+        import random
+        from utils.email_templates.welcome_design import welcome_email_template
+
+        try:
+            # Read the uploaded Excel file
+            df = pd.read_excel(file.file)
+            
+            # Expected columns: Name, Email, Number, DOB, Gender, City, State
+            required_cols = ['Name', 'Email']
+            for col in required_cols:
+                if col not in df.columns:
+                    return {"success": False, "message": f"Missing required column: {col}"}
+            
+            success_count = 0
+            failed_count = 0
+            failed_reasons = []
+
+            for index, row in df.iterrows():
+                try:
+                    email = str(row['Email']).strip()
+                    name = str(row['Name']).strip()
+                    role = 'trainer'
+
+                    if pd.isna(email) or not email or str(email) == 'nan':
+                        continue
+
+                    # Check if email exists
+                    existing_user = db.query(user_profile_table).filter(
+                        user_profile_table.user_email == email
+                    ).first()
+
+                    if existing_user:
+                        failed_count += 1
+                        failed_reasons.append({"email": email, "reason": "Email already exists"})
+                        continue
+
+                    # Generate randomized password
+                    length = 9
+                    all_chars = string.ascii_letters + string.digits + "!@#$%^&*"
+                    password = ''.join(random.choice(all_chars) for _ in range(length))
+                    password += random.choice(string.ascii_letters)
+                    password += random.choice(string.digits)
+                    password += random.choice("!@#$%^&*")
+                    password_list = list(password)
+                    random.shuffle(password_list)
+                    final_password = "".join(password_list)
+
+                    number = row.get('Number', None)
+                    if pd.isna(number): number = None
+                    dob = row.get('DOB', None)
+                    if pd.isna(dob): dob = None
+                    gender = row.get('Gender', None)
+                    if pd.isna(gender): gender = None
+                    city = row.get('City', None)
+                    if pd.isna(city): city = None
+                    state = row.get('State', None)
+                    if pd.isna(state): state = None
+
+                    user_id = f"USER-{uuid.uuid4()}"
+                    
+                    new_user = user_profile_table(
+                        user_id=user_id,
+                        user_email=email,
+                        user_name=name,
+                        user_number=number,
+                        user_dob=dob,
+                        user_pic=None,
+                        user_gender=gender,
+                        user_city=city,
+                        user_state=state,
+                        user_college=None,
+                        user_email_verified=True,
+                        Status="Active"
+                    )
+                    db.add(new_user)
+                    db.flush()
+
+                    refresh_token = create_refresh_token(user_id)
+                    new_refresh_token = user_refresh_token_table(
+                        refresh_token_id=f"RefreshToken-{uuid.uuid4()}",
+                        user_id=user_id,
+                        refresh_token=refresh_token,
+                        ip_address="admin_bulk_upload",
+                        user_agent="admin_bulk_upload",
+                        device_name="admin_bulk_upload",
+                        expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+                        is_revoked=False
+                    )
+
+                    access = user_access_table(
+                        access_id=f"Access-{uuid.uuid4()}",
+                        user_id=user_id,
+                        provider_id=f"Email-{uuid.uuid4()}",
+                        provider_name="Email",
+                        role=role,
+                        password_hash=hash_password(final_password)
+                    )
+
+                    db.add_all([access, new_refresh_token])
+                    db.commit()
+
+                    # Send email
+                    subject = "Welcome to Gyanteerth - Trainer Account Created"
+                    body = welcome_email_template(name, email, final_password, role)
+                    background_tasks.add_task(send_email, email, subject, body)
+
+                    success_count += 1
+
+                except Exception as row_error:
+                    db.rollback()
+                    failed_count += 1
+                    failed_reasons.append({"email": str(row.get('Email')), "reason": str(row_error)})
+
+            return {
+                "success": True,
+                "message": "Bulk trainer upload processed",
+                "successful_creations": success_count,
+                "failed_creations": failed_count,
+                "failed_details": failed_reasons
+            }
+
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(
+                status_code=500,
+                detail=f"An error occurred while processing the bulk trainer upload: {str(e)}"
             )
 
     async def bulk_upload_questions_service(self, assessment_id: str, file: UploadFile, db: Session):

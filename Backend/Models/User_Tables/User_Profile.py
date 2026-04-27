@@ -16,6 +16,7 @@ class user_profile_table(Base):
     user_gender = Column(String(10), nullable=True)
     user_city = Column(String(100), nullable=True)
     user_state = Column(String(100), nullable=True)
+    user_college = Column(String(150), nullable=True)
     Status = Column(String(30),nullable=True)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     created_at = Column(DateTime, default=func.now())
