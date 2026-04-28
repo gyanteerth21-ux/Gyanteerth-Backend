@@ -13,8 +13,4 @@ class AssessmentAttemptTable(Base):
     Status = Column(String(20),nullable=False)
     Completed_At = Column(DateTime)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    created_at = Column(DateTime, default=func.now())
-
-    __table_args__ = (
-        CheckConstraint('"Attempt_No" >= 1 AND "Attempt_No" < 4', name='check_attempt_range'),
-    )
+    created_at = Column(DateTime, default=func.now())

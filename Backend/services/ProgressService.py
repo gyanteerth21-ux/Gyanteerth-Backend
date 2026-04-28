@@ -44,7 +44,12 @@ class ProgressService:
         return {"message": "Video marked as completed successfully"}
 
     async def submit_assessment(self, user_id: str, course_id: str, module_id: str, assessment_id: str, answers: dict[str, str], db: Session):
-        # 1. Check existing attempt
+        # 1. Fetch assessment details
+        assessment = db.query(AssessmentTable).filter(AssessmentTable.Assessment_ID == assessment_id).first()
+        if not assessment:
+            raise HTTPException(status_code=404, detail="Assessment not found")
+
+        # 2. Check existing attempt
         attempt = db.query(AssessmentAttemptTable).filter(
             AssessmentAttemptTable.User_ID == user_id,
             AssessmentAttemptTable.Assessment_ID == assessment_id
@@ -60,19 +65,17 @@ class ProgressService:
                     "status": attempt.Status,
                     "passed": True
                 }
-            if attempt.Attempt_No >= 3:
+            if attempt.Attempt_No >= assessment.Attempt_Limit:
                 raise HTTPException(status_code=400, detail="Maximum distinct attempts reached. Contact Admin to reset.")
             attempt_no = attempt.Attempt_No + 1
-
-        # 2. Fetch assessment details
-        assessment = db.query(AssessmentTable).filter(AssessmentTable.Assessment_ID == assessment_id).first()
-        if not assessment:
-            raise HTTPException(status_code=404, detail="Assessment not found")
 
         # 3. Calculate score
         score = 0
         answer_records = []
         for q_id, o_id in answers.items():
+            if not o_id or not str(o_id).strip():
+                continue
+                
             correct_opt = db.query(optionTable).filter(
                 optionTable.Question_ID == q_id,
                 optionTable.Is_Correct == True

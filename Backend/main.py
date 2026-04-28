@@ -26,16 +26,19 @@ def startup_db_sync():
     from Models.Progress.AssessmentAnswerTable import AssessmentAnswerTable
     
     try:
+        # Ensure new tables like AssessmentAnswerTable are created FIRST
+        AssessmentAnswerTable.metadata.create_all(bind=engine)
+        print("Database tables sync completed successfully on startup.")
+    except Exception as e:
+        print(f"Database tables sync failed: {str(e)}")
+        
+    try:
         with engine.connect() as conn:
-            # Safely add the user_college column if it doesn't exist
+            # Safely add the user_college column (may fail if dialect doesn't support IF NOT EXISTS, but won't block table creation)
             conn.execute(text("ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS user_college VARCHAR(150);"))
             conn.commit()
-            
-        # Ensure new tables like AssessmentAnswerTable are created
-        AssessmentAnswerTable.metadata.create_all(bind=engine)
-        print("Database sync completed successfully on startup.")
     except Exception as e:
-        print(f"Database sync skipped/failed: {str(e)}")
+        print(f"ALTER TABLE skipped/failed: {str(e)}")
 
 app.add_middleware(SessionMiddleware, secret_key="your_super_secret_key_here")
 app.add_middleware(
