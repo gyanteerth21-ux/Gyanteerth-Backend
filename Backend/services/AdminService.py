@@ -1799,6 +1799,7 @@ class AdminService:
                         "total_mark": assess.Total_Mark,
                         "passing_mark": assess.Passing_Mark,
                         "duration": assess.Duration,
+                        "attempt_limit": assess.Attempt_Limit,
                         "questions": question_list
                     })
     
