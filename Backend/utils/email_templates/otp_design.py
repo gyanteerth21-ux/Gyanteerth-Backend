@@ -145,7 +145,7 @@ Click the link below to update  your account password.
 
 <tr>
 <td align="center" style="padding:30px 0;">
-<button><a href="https://www.aruljayaraj.in/reset-password?token={token}" 
+<button><a href="https://gyanteerth.vercel.app/reset-password?token={token}" 
 style="
 text-decoration:none;
 color:#ffffff;
