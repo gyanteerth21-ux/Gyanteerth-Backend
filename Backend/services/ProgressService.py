@@ -295,6 +295,7 @@ class ProgressService:
                 "assessment_id": ap.Assessment_ID,
                 "score": ap.Score,
                 "attempt_no": ap.Attempt_No,
+                "attempts_used": ap.Attempt_No,
                 "status": ap.Status
             } for ap in assess_progs
         ]
