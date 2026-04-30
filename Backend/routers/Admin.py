@@ -633,3 +633,13 @@ async def get_all_feedback_api(db: Session = Depends(get_db), token: dict = Depe
 async def update_feedback_status_api(feedback_id: str, request: FeedbackStatusUpdateRequest, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
     return await AdminService().update_feedback_status(feedback_id, request.display_status, db)
 
+from schemas.admin import AdminAssessmentResetRequestsResponse, AdminAssessmentResetActionRequest, AdminAssessmentResetActionResponse
+
+@router_admin.get("/assessment/reset-requests", response_model=AdminAssessmentResetRequestsResponse, summary="Get Assessment Reset Requests")
+async def get_assessment_reset_requests_api(db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().get_assessment_reset_requests(db)
+
+@router_admin.post("/assessment/reset-request/{request_id}/action", response_model=AdminAssessmentResetActionResponse, summary="Approve or Reject Assessment Reset")
+async def handle_assessment_reset_request_api(request_id: str, request: AdminAssessmentResetActionRequest, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().handle_assessment_reset_request(request_id, request.action, db)
+

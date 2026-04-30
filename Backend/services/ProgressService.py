@@ -19,6 +19,7 @@ from Models.Progress.LiveAttendanceTable import LiveAttendanceTable
 from Models.Progress.AssessmentAttemptTable import AssessmentAttemptTable
 from Models.Progress.ModuleProgressTable import ModuleProgressTable
 from Models.Progress.CourseProgressTable import CourseProgressTable
+from Models.Progress.AssessmentResetRequestTable import AssessmentResetRequestTable
 
 class ProgressService:
     async def mark_video_progress(self, user_id: str, course_id: str, module_id: str, video_id: str, db: Session):
@@ -321,3 +322,35 @@ class ProgressService:
         db.delete(attempt)
         db.commit()
         return {"message": "Assessment attempts successfully reset for user"}
+
+    async def request_assessment_reset(self, user_id: str, assessment_id: str, reason: str, db: Session):
+        assessment = db.query(AssessmentTable).filter(AssessmentTable.Assessment_ID == assessment_id).first()
+        if not assessment:
+            raise HTTPException(status_code=404, detail="Assessment not found")
+
+        # Check if already requested and pending
+        existing_request = db.query(AssessmentResetRequestTable).filter(
+            AssessmentResetRequestTable.User_ID == user_id,
+            AssessmentResetRequestTable.Assessment_ID == assessment_id,
+            AssessmentResetRequestTable.Status == "Pending"
+        ).first()
+
+        if existing_request:
+            raise HTTPException(status_code=400, detail="You already have a pending request for this assessment")
+
+        request_id = f"RST-REQ-{uuid.uuid4().hex[:8]}"
+        new_request = AssessmentResetRequestTable(
+            Request_ID=request_id,
+            User_ID=user_id,
+            Assessment_ID=assessment_id,
+            Reason=reason,
+            Status="Pending",
+            Requested_At=datetime.utcnow()
+        )
+        db.add(new_request)
+        db.commit()
+
+        return {
+            "message": "Reset request submitted successfully",
+            "request_id": request_id
+        }

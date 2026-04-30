@@ -174,5 +174,9 @@ class CertificateVerifyResponse(BaseModel):
     is_valid: bool
     data: Optional[CertificateDetailsResponse] = None
 
+class AssessmentResetRequestPayload(BaseModel):
+    reason: str
 
-
+class AssessmentResetRequestResponse(BaseModel):
+    message: str
+    request_id: str

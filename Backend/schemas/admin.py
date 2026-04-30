@@ -911,4 +911,26 @@ class AllFeedbackAdminResponse(BaseModel):
 
 class FeedbackStatusUpdateRequest(BaseModel):
     display_status: str
+
+class AdminAssessmentResetRequestItem(BaseModel):
+    request_id: str
+    user_id: str
+    user_name: Optional[str]
+    assessment_id: str
+    assessment_title: Optional[str]
+    course_id: Optional[str]
+    reason: Optional[str]
+    status: str
+    requested_at: datetime
+
+class AdminAssessmentResetRequestsResponse(BaseModel):
+    status: bool
+    data: List[AdminAssessmentResetRequestItem]
+
+class AdminAssessmentResetActionRequest(BaseModel):
+    action: str  # "Approve" or "Reject"
+    
+class AdminAssessmentResetActionResponse(BaseModel):
+    status: bool
+    message: str
 

@@ -2802,3 +2802,74 @@ class AdminService:
                 status_code=500,
                 detail=f"An error occurred during bulk questions upload: {str(e)}"
             )
+
+    async def get_assessment_reset_requests(self, db: Session):
+        from Models.Progress.AssessmentResetRequestTable import AssessmentResetRequestTable
+        
+        requests = db.query(
+            AssessmentResetRequestTable.Request_ID,
+            AssessmentResetRequestTable.User_ID,
+            user_profile_table.user_name,
+            AssessmentResetRequestTable.Assessment_ID,
+            AssessmentTable.Title.label("assessment_title"),
+            AssessmentResetRequestTable.Reason,
+            AssessmentResetRequestTable.Status,
+            AssessmentResetRequestTable.Requested_At
+        ).join(
+            user_profile_table, user_profile_table.user_id == AssessmentResetRequestTable.User_ID
+        ).join(
+            AssessmentTable, AssessmentTable.Assessment_ID == AssessmentResetRequestTable.Assessment_ID
+        ).order_by(AssessmentResetRequestTable.Requested_At.desc()).all()
+
+        data = [
+            {
+                "request_id": r.Request_ID,
+                "user_id": r.User_ID,
+                "user_name": r.user_name,
+                "assessment_id": r.Assessment_ID,
+                "assessment_title": r.assessment_title,
+                "course_id": None,
+                "reason": r.Reason,
+                "status": r.Status,
+                "requested_at": r.Requested_At
+            }
+            for r in requests
+        ]
+        
+        return {
+            "status": True,
+            "data": data
+        }
+
+    async def handle_assessment_reset_request(self, request_id: str, action: str, db: Session):
+        from Models.Progress.AssessmentResetRequestTable import AssessmentResetRequestTable
+        from services.ProgressService import ProgressService
+
+        request = db.query(AssessmentResetRequestTable).filter(AssessmentResetRequestTable.Request_ID == request_id).first()
+        
+        if not request:
+            raise HTTPException(status_code=404, detail="Reset request not found")
+            
+        if request.Status != "Pending":
+            raise HTTPException(status_code=400, detail=f"Request is already {request.Status}")
+            
+        if action.lower() == "approve":
+            request.Status = "Approved"
+            request.Resolved_At = datetime.utcnow()
+            
+            progress_service = ProgressService()
+            await progress_service.reset_assessment_attempts(request.User_ID, request.Assessment_ID, db)
+            
+            message = "Reset request approved and attempts reset successfully"
+        elif action.lower() == "reject":
+            request.Status = "Rejected"
+            request.Resolved_At = datetime.utcnow()
+            db.commit()
+            message = "Reset request rejected successfully"
+        else:
+            raise HTTPException(status_code=400, detail="Invalid action. Use 'Approve' or 'Reject'")
+            
+        return {
+            "status": True,
+            "message": message
+        }

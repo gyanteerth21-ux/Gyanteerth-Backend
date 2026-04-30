@@ -81,7 +81,7 @@ async def mark_live_attendance_api(request: MarkLiveAttendanceRequest, db: Sessi
         db=db
     )
 
-from schemas.user import SubmitAssessmentRequest, SubmitAssessmentResponse, MarkVideoProgressRequest, MarkVideoProgressResponse, CourseProgressResponse
+from schemas.user import SubmitAssessmentRequest, SubmitAssessmentResponse, MarkVideoProgressRequest, MarkVideoProgressResponse, CourseProgressResponse, AssessmentResetRequestPayload, AssessmentResetRequestResponse
 from services.ProgressService import ProgressService
 
 @router_user.post("/mark-video-progress", response_model=MarkVideoProgressResponse, summary="Mark Video Progress")
@@ -104,6 +104,16 @@ async def submit_assessment_api(request: SubmitAssessmentRequest, db: Session = 
         module_id=request.module_id,
         assessment_id=request.assessment_id,
         answers=request.answers,
+        db=db
+    )
+
+@router_user.post("/assessment/{assessment_id}/reset-request", response_model=AssessmentResetRequestResponse, summary="Request Assessment Reset")
+async def request_assessment_reset_api(assessment_id: str, request: AssessmentResetRequestPayload, db: Session = Depends(get_db), token: dict = Depends(user_Authorization())):
+    user_id = token.get("user_id")
+    return await ProgressService().request_assessment_reset(
+        user_id=user_id,
+        assessment_id=assessment_id,
+        reason=request.reason,
         db=db
     )
 
