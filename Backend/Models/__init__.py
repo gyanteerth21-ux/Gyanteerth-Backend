@@ -11,5 +11,5 @@ from .Course_Tables.course_details import *
 from .Course_Tables.Live_Course import *
 from .Course_Tables.Recorded_live import *
 from .Course_Tables.Course_Demo import *
-
 from .Progress.AssessmentResetRequestTable import *
+from .Progress.AssessmentAnswerTable import *
