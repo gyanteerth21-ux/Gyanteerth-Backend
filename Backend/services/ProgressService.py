@@ -74,6 +74,8 @@ class ProgressService:
         score = 0
         answer_records = []
         for q_id, o_id in answers.items():
+            if not str(q_id).startswith("QUES-"):
+                continue
             if not o_id or not str(o_id).strip():
                 continue
                 
