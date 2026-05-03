@@ -36,6 +36,12 @@ def startup_db_sync():
         with engine.connect() as conn:
             # Safely add the user_college column (may fail if dialect doesn't support IF NOT EXISTS, but won't block table creation)
             conn.execute(text("ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS user_college VARCHAR(150);"))
+            
+            # Safely add the LiveAttendanceTable columns that might be missing if alembic upgrade isn't run
+            conn.execute(text('ALTER TABLE live_attendance_table ADD COLUMN IF NOT EXISTS "Attended_Live" BOOLEAN DEFAULT FALSE;'))
+            conn.execute(text('ALTER TABLE live_attendance_table ADD COLUMN IF NOT EXISTS "Watched_Recording" BOOLEAN DEFAULT FALSE;'))
+            conn.execute(text('ALTER TABLE live_attendance_table ADD COLUMN IF NOT EXISTS "Is_Present" BOOLEAN DEFAULT FALSE;'))
+            
             conn.commit()
     except Exception as e:
         print(f"ALTER TABLE skipped/failed: {str(e)}")
