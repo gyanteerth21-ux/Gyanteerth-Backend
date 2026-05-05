@@ -76,7 +76,7 @@ class ProgressService:
             q_id_str = str(q_id).strip()
             o_id_str = str(o_id).strip()
             
-            if not q_id_str.startswith("QUES-"):
+            if not (q_id_str.startswith("QUES-") or q_id_str.startswith("QUESTION-")):
                 continue
             if not o_id_str:
                 continue
