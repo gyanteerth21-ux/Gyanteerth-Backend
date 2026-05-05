@@ -167,30 +167,36 @@ class ProgressService:
                 return False
             course_id = mod.Course_ID
 
-        # Check total videos vs completed videos
-        video_ids = db.query(CourseVideoTable.Video_ID).filter(CourseVideoTable.Module_ID == module_id).all()
-        if video_ids:
-            total_videos = len(video_ids)
-            completed_videos = db.query(func.count(VideoProgressTable.Video_ID)).filter(
-                VideoProgressTable.User_ID == user_id,
-                VideoProgressTable.Module_ID == module_id
-            ).scalar()
-            if completed_videos < total_videos:
-                return False
+        from Models.Course_Tables.course_details import CourseTable
+        course = db.query(CourseTable).filter(CourseTable.course_id == course_id).first()
+        course_type = course.course_Type.lower() if course and course.course_Type else ""
 
-        # Check live sessions
-        live_ids = db.query(LiveCourseTable.Live_ID).filter(LiveCourseTable.Module_ID == module_id).all()
-        if live_ids:
-            total_lives = len(live_ids)
-            completed_lives = db.query(func.count(LiveAttendanceTable.Live_Class_ID)).filter(
-                LiveAttendanceTable.User_ID == user_id,
-                LiveAttendanceTable.Module_ID == module_id,
-                LiveAttendanceTable.Is_Present == True
-            ).scalar()
-            if completed_lives < total_lives:
-                return False
+        # Check total videos vs completed videos (only for non-live courses)
+        if course_type != "live":
+            video_ids = db.query(CourseVideoTable.Video_ID).filter(CourseVideoTable.Module_ID == module_id).all()
+            if video_ids:
+                total_videos = len(video_ids)
+                completed_videos = db.query(func.count(VideoProgressTable.Video_ID)).filter(
+                    VideoProgressTable.User_ID == user_id,
+                    VideoProgressTable.Module_ID == module_id
+                ).scalar()
+                if completed_videos < total_videos:
+                    return False
 
-        # Check assessments
+        # Check live sessions (only for live courses)
+        if course_type == "live":
+            live_ids = db.query(LiveCourseTable.Live_ID).filter(LiveCourseTable.Module_ID == module_id).all()
+            if live_ids:
+                total_lives = len(live_ids)
+                completed_lives = db.query(func.count(LiveAttendanceTable.Live_Class_ID)).filter(
+                    LiveAttendanceTable.User_ID == user_id,
+                    LiveAttendanceTable.Module_ID == module_id,
+                    LiveAttendanceTable.Is_Present == True
+                ).scalar()
+                if completed_lives < total_lives:
+                    return False
+
+        # Check assessments (applicable to all courses)
         assessment_ids = db.query(AssessmentTable.Assessment_ID).filter(AssessmentTable.Module_ID == module_id).all()
         if assessment_ids:
             total_assessments = len(assessment_ids)
@@ -229,14 +235,23 @@ class ProgressService:
         return True
 
     def _calculate_course_progress(self, user_id: str, course_id: str, db: Session):
-        # Calculate total lessons (videos + live sessions + assessments)
-        total_videos = db.query(func.count(CourseVideoTable.Video_ID)).join(
-            CourseModuleTable, CourseModuleTable.Module_ID == CourseVideoTable.Module_ID
-        ).filter(CourseModuleTable.Course_ID == course_id).scalar() or 0
+        from Models.Course_Tables.course_details import CourseTable
+        course = db.query(CourseTable).filter(CourseTable.course_id == course_id).first()
+        course_type = course.course_Type.lower() if course and course.course_Type else ""
 
-        total_lives = db.query(func.count(LiveCourseTable.Live_ID)).join(
-            CourseModuleTable, CourseModuleTable.Module_ID == LiveCourseTable.Module_ID
-        ).filter(CourseModuleTable.Course_ID == course_id).scalar() or 0
+        # Calculate total lessons (videos + live sessions + assessments)
+        total_videos = 0
+        total_lives = 0
+
+        if course_type != "live":
+            total_videos = db.query(func.count(CourseVideoTable.Video_ID)).join(
+                CourseModuleTable, CourseModuleTable.Module_ID == CourseVideoTable.Module_ID
+            ).filter(CourseModuleTable.Course_ID == course_id).scalar() or 0
+        
+        if course_type == "live":
+            total_lives = db.query(func.count(LiveCourseTable.Live_ID)).join(
+                CourseModuleTable, CourseModuleTable.Module_ID == LiveCourseTable.Module_ID
+            ).filter(CourseModuleTable.Course_ID == course_id).scalar() or 0
 
         total_assessments = db.query(func.count(AssessmentTable.Assessment_ID)).join(
             CourseModuleTable, CourseModuleTable.Module_ID == AssessmentTable.Module_ID
@@ -248,20 +263,25 @@ class ProgressService:
             return
 
         # Calculate completed lessons
-        completed_videos = db.query(func.count(VideoProgressTable.Video_ID)).join(
-            CourseModuleTable, CourseModuleTable.Module_ID == VideoProgressTable.Module_ID
-        ).filter(
-            CourseModuleTable.Course_ID == course_id,
-            VideoProgressTable.User_ID == user_id
-        ).scalar() or 0
+        completed_videos = 0
+        completed_lives = 0
 
-        completed_lives = db.query(func.count(LiveAttendanceTable.Live_Class_ID)).join(
-            CourseModuleTable, CourseModuleTable.Module_ID == LiveAttendanceTable.Module_ID
-        ).filter(
-            CourseModuleTable.Course_ID == course_id,
-            LiveAttendanceTable.User_ID == user_id,
-            LiveAttendanceTable.Is_Present == True
-        ).scalar() or 0
+        if course_type != "live":
+            completed_videos = db.query(func.count(VideoProgressTable.Video_ID)).join(
+                CourseModuleTable, CourseModuleTable.Module_ID == VideoProgressTable.Module_ID
+            ).filter(
+                CourseModuleTable.Course_ID == course_id,
+                VideoProgressTable.User_ID == user_id
+            ).scalar() or 0
+
+        if course_type == "live":
+            completed_lives = db.query(func.count(LiveAttendanceTable.Live_Class_ID)).join(
+                CourseModuleTable, CourseModuleTable.Module_ID == LiveAttendanceTable.Module_ID
+            ).filter(
+                CourseModuleTable.Course_ID == course_id,
+                LiveAttendanceTable.User_ID == user_id,
+                LiveAttendanceTable.Is_Present == True
+            ).scalar() or 0
 
         completed_assessments = db.query(func.count(AssessmentAttemptTable.Assessment_ID)).join(
             CourseModuleTable, CourseModuleTable.Module_ID == AssessmentAttemptTable.Module_ID
