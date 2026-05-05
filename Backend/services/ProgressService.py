@@ -130,6 +130,7 @@ class ProgressService:
                 Completed_At=datetime.utcnow()
             )
             db.add(new_attempt)
+            db.flush()  # Ensure attempt is saved before answers reference it
             should_save_answers = True
 
         if should_save_answers:
