@@ -312,6 +312,9 @@ class ProgressService:
         db.commit()
 
     async def get_course_progress(self, user_id: str, course_id: str, db: Session):
+        # Auto-heal any corrupted progress by recalculating dynamically on fetch
+        self._calculate_course_progress(user_id, course_id, db)
+
         course_prog = db.query(CourseProgressTable).filter(
             CourseProgressTable.User_ID == user_id,
             CourseProgressTable.Course_ID == course_id
