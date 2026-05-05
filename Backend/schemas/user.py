@@ -137,6 +137,7 @@ class CourseProgressResponse(BaseModel):
     progress_percentage: int
     modules_progress: dict[str, str]  # module_id -> status
     assessments_progress: list[dict]  # array of basic stats
+    lessons_progress: list[dict] = [] # video and live session progress
 
 from datetime import datetime
 from typing import List
