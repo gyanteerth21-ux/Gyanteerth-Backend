@@ -229,20 +229,62 @@ class ProgressService:
         return True
 
     def _calculate_course_progress(self, user_id: str, course_id: str, db: Session):
+        # Calculate total lessons (videos + live sessions + assessments)
+        total_videos = db.query(func.count(CourseVideoTable.Video_ID)).join(
+            CourseModuleTable, CourseModuleTable.Module_ID == CourseVideoTable.Module_ID
+        ).filter(CourseModuleTable.Course_ID == course_id).scalar() or 0
+
+        total_lives = db.query(func.count(LiveCourseTable.Live_ID)).join(
+            CourseModuleTable, CourseModuleTable.Module_ID == LiveCourseTable.Module_ID
+        ).filter(CourseModuleTable.Course_ID == course_id).scalar() or 0
+
+        total_assessments = db.query(func.count(AssessmentTable.Assessment_ID)).join(
+            CourseModuleTable, CourseModuleTable.Module_ID == AssessmentTable.Module_ID
+        ).filter(CourseModuleTable.Course_ID == course_id).scalar() or 0
+
+        total_items = total_videos + total_lives + total_assessments
+
+        if total_items == 0:
+            return
+
+        # Calculate completed lessons
+        completed_videos = db.query(func.count(VideoProgressTable.Video_ID)).join(
+            CourseModuleTable, CourseModuleTable.Module_ID == VideoProgressTable.Module_ID
+        ).filter(
+            CourseModuleTable.Course_ID == course_id,
+            VideoProgressTable.User_ID == user_id
+        ).scalar() or 0
+
+        completed_lives = db.query(func.count(LiveAttendanceTable.Live_Class_ID)).join(
+            CourseModuleTable, CourseModuleTable.Module_ID == LiveAttendanceTable.Module_ID
+        ).filter(
+            CourseModuleTable.Course_ID == course_id,
+            LiveAttendanceTable.User_ID == user_id,
+            LiveAttendanceTable.Is_Present == True
+        ).scalar() or 0
+
+        completed_assessments = db.query(func.count(AssessmentAttemptTable.Assessment_ID)).join(
+            CourseModuleTable, CourseModuleTable.Module_ID == AssessmentAttemptTable.Module_ID
+        ).filter(
+            CourseModuleTable.Course_ID == course_id,
+            AssessmentAttemptTable.User_ID == user_id,
+            AssessmentAttemptTable.Status == "Passed"
+        ).scalar() or 0
+
+        completed_items = completed_videos + completed_lives + completed_assessments
+        
+        percent = int((completed_items / total_items) * 100)
+
+        # Still keep track of completed modules for other reporting purposes
         total_modules = db.query(func.count(CourseModuleTable.Module_ID)).filter(
             CourseModuleTable.Course_ID == course_id
         ).scalar() or 0
-
-        if total_modules == 0:
-            return
 
         completed_modules = db.query(func.count(ModuleProgressTable.Module_ID)).filter(
             ModuleProgressTable.User_ID == user_id,
             ModuleProgressTable.Course_ID == course_id,
             ModuleProgressTable.Status == "Completed"
         ).scalar() or 0
-
-        percent = int((completed_modules / total_modules) * 100)
 
         course_prog = db.query(CourseProgressTable).filter(
             CourseProgressTable.User_ID == user_id,
