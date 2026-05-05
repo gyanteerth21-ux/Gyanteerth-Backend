@@ -303,13 +303,36 @@ class ProgressService:
             } for ap in assess_progs
         ]
 
+        video_progs = db.query(VideoProgressTable).join(
+            CourseModuleTable, CourseModuleTable.Module_ID == VideoProgressTable.Module_ID
+        ).filter(
+            VideoProgressTable.User_ID == user_id,
+            CourseModuleTable.Course_ID == course_id
+        ).all()
+
+        live_progs = db.query(LiveAttendanceTable).join(
+            CourseModuleTable, CourseModuleTable.Module_ID == LiveAttendanceTable.Module_ID
+        ).filter(
+            LiveAttendanceTable.User_ID == user_id,
+            CourseModuleTable.Course_ID == course_id
+        ).all()
+
+        lessons_progress = [
+            {"lesson_id": vp.Video_ID, "status": "Completed", "completed": True}
+            for vp in video_progs
+        ] + [
+            {"lesson_id": lp.Live_Class_ID, "status": "Completed" if lp.Is_Present else "Pending", "completed": lp.Is_Present}
+            for lp in live_progs
+        ]
+
         return {
             "course_id": course_id,
             "total_modules": tot_mods,
             "completed_modules": comp_mods,
             "progress_percentage": percent,
             "modules_progress": mod_dict,
-            "assessments_progress": a_list
+            "assessments_progress": a_list,
+            "lessons_progress": lessons_progress
         }
 
     async def reset_assessment_attempts(self, user_id: str, assessment_id: str, db: Session):
