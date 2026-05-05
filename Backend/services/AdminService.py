@@ -1708,7 +1708,8 @@ class AdminService:
                     "content": {}
                 }
     
-                if course.course_Type.lower() != "live":
+                course_type = course.course_Type.lower() if course.course_Type else ""
+                if course_type != "live":
     
                     videos = db.query(CourseVideoTable).filter(
                         CourseVideoTable.Module_ID == module.Module_ID

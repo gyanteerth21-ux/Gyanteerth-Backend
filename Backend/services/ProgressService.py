@@ -303,19 +303,27 @@ class ProgressService:
             } for ap in assess_progs
         ]
 
-        video_progs = db.query(VideoProgressTable).join(
-            CourseModuleTable, CourseModuleTable.Module_ID == VideoProgressTable.Module_ID
-        ).filter(
-            VideoProgressTable.User_ID == user_id,
-            CourseModuleTable.Course_ID == course_id
-        ).all()
+        video_progs = []
+        try:
+            video_progs = db.query(VideoProgressTable).join(
+                CourseModuleTable, CourseModuleTable.Module_ID == VideoProgressTable.Module_ID
+            ).filter(
+                VideoProgressTable.User_ID == user_id,
+                CourseModuleTable.Course_ID == course_id
+            ).all()
+        except Exception as e:
+            print(f"Error fetching video progress: {e}")
 
-        live_progs = db.query(LiveAttendanceTable).join(
-            CourseModuleTable, CourseModuleTable.Module_ID == LiveAttendanceTable.Module_ID
-        ).filter(
-            LiveAttendanceTable.User_ID == user_id,
-            CourseModuleTable.Course_ID == course_id
-        ).all()
+        live_progs = []
+        try:
+            live_progs = db.query(LiveAttendanceTable).join(
+                CourseModuleTable, CourseModuleTable.Module_ID == LiveAttendanceTable.Module_ID
+            ).filter(
+                LiveAttendanceTable.User_ID == user_id,
+                CourseModuleTable.Course_ID == course_id
+            ).all()
+        except Exception as e:
+            print(f"Error fetching live progress: {e}")
 
         lessons_progress = [
             {"lesson_id": vp.Video_ID, "status": "Completed", "completed": True}
