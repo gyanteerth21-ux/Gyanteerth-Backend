@@ -70,31 +70,31 @@ class ProgressService:
                 raise HTTPException(status_code=400, detail="Maximum distinct attempts reached. Contact Admin to reset.")
             attempt_no = attempt.Attempt_No + 1
 
-        # 3. Calculate score
         score = 0
         answer_records = []
         for q_id, o_id in answers.items():
-            if not str(q_id).startswith("QUES-"):
+            q_id_str = str(q_id).strip()
+            o_id_str = str(o_id).strip()
+            
+            if not q_id_str.startswith("QUES-"):
                 continue
-            if not o_id or not str(o_id).strip():
+            if not o_id_str:
                 continue
                 
-            correct_opt = db.query(optionTable).filter(
-                optionTable.Question_ID == q_id,
-                optionTable.Is_Correct == True
-            ).first()
+            # Fetch the exact option the user selected
+            selected_opt = db.query(optionTable).filter(optionTable.Option_ID == o_id_str).first()
             
             is_correct = False
-            if correct_opt and correct_opt.Option_ID == o_id:
+            if selected_opt and selected_opt.Is_Correct:
                 is_correct = True
                 # Add marks for this question
-                question = db.query(QuestionTable).filter(QuestionTable.Question_ID == q_id).first()
+                question = db.query(QuestionTable).filter(QuestionTable.Question_ID == q_id_str).first()
                 if question:
-                    score += question.Mark
+                    score += int(question.Mark or 0)
 
             answer_records.append({
-                "Question_ID": q_id,
-                "Option_ID": o_id,
+                "Question_ID": q_id_str,
+                "Option_ID": o_id_str,
                 "Is_Correct": is_correct
             })
 
