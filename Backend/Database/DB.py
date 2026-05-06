@@ -7,7 +7,11 @@ from sqlalchemy.pool import NullPool
 import time
 import os
 
-load_dotenv()
+from pathlib import Path
+# Look for .env in the Backend directory (one level up from Database/)
+env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
+
 db_url = os.getenv("DATABASE_URL")
 
 if not db_url:
