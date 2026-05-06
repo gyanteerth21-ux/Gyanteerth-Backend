@@ -16,7 +16,7 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          printf "%s\n" "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.EC2_SSH_KEY_BASE64 }}" | base64 -d > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
       - name: Deploy to EC2
@@ -36,5 +36,7 @@ jobs:
           export DATABASE_URL="temp"
 
           pm2 restart gyanteerth-backend || pm2 start "venv/bin/uvicorn Backend.main:app --host 0.0.0.0 --port 8000" --name gyanteerth-backend
+
+          pm2 save
 
           EOF
