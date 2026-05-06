@@ -2,13 +2,13 @@ import uuid
 import sys
 import os
 
-# Add the current directory to sys.path so we can import our modules
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Add the Backend folder to path
+sys.path.append(os.getcwd())
 
-from Backend.Database.DB import SessionLocal
-from Backend.Models.User_Tables.User_Profile import user_profile_table
-from Backend.Models.User_Tables.User_Access import user_access_table
-from Backend.utils.security import hash_password
+from Database.DB import SessionLocal
+from Models.User_Tables.User_Profile import user_profile_table
+from Models.User_Tables.User_Access import user_access_table
+from utils.security import hash_password
 
 def create_admin():
     db = SessionLocal()
