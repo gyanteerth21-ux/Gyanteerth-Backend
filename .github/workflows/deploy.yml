@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Deploy FastAPI Backend
 
 on:
   push:
@@ -10,16 +10,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: SSH into EC2 and deploy
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: 44.208.200.126
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY}}
-          script: |
-            cd ~/lms
-            git pull origin main
-            cd Backend
-            source venv/bin/activate
-            pip install -r requirements.txt
-            sudo systemctl restart lms
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+          -i ~/.ssh/id_rsa \
+          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+
+          cd /home/ubuntu/Gyanteerth-Backend
+
+          git pull origin main
+
+          source venv/bin/activate
+
+          pip install -r Backend/requirements.txt
+
+          export DATABASE_URL="temp"
+
+          pm2 restart gyanteerth-backend || pm2 start "venv/bin/uvicorn Backend.main:app --host 0.0.0.0 --port 8000" --name gyanteerth-backend
+
+          EOF
