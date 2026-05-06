@@ -8,13 +8,12 @@ from utils.Emailservice import send_email
 from Database.DB import get_db
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
-import os
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
 import time
 import uuid
 
 
-load_dotenv()
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
     api_key=os.getenv("CLOUDINARY_API_KEY"),
