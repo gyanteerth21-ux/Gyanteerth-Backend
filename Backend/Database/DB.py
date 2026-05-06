@@ -1,16 +1,14 @@
 from sqlalchemy import create_engine, Column, Integer, String, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from sqlalchemy.engine import Engine
 from sqlalchemy.pool import NullPool
 import time
 import os
 
-from pathlib import Path
-# Look for .env in the Backend directory (one level up from Database/)
-env_path = Path(__file__).resolve().parent.parent / ".env"
-load_dotenv(dotenv_path=env_path)
+# Automatically find the .env file in parent directories
+load_dotenv(find_dotenv())
 
 db_url = os.getenv("DATABASE_URL")
 

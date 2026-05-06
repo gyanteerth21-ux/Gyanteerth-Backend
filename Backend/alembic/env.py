@@ -8,8 +8,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import ALL models (important for metadata)
 import Models
-from dotenv import load_dotenv
-load_dotenv()
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
 
 # Override sqlalchemy.url from environment if present
 database_url = os.getenv("DATABASE_URL")

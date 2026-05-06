@@ -11,8 +11,8 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import dotenv
-dotenv.load_dotenv()
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
 
 from Database.DB import engine
 from Models.User_Tables.User_Profile import Base

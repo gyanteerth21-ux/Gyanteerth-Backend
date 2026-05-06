@@ -110,8 +110,8 @@ Committed towards excellence
 """
 
 import os
-from dotenv import load_dotenv
-load_dotenv()
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
 
 def forget_password_email_template(token: str):
     frontend_url = os.getenv("FRONTEND_URL", "https://gyanteerthlearning.online").rstrip('/')

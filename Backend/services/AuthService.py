@@ -19,9 +19,9 @@ from utils.security import create_refresh_token,create_forget_token
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from fastapi import Request
-import dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
-dotenv.load_dotenv()
+load_dotenv(find_dotenv())
 
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7))
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
