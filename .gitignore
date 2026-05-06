@@ -17,7 +17,9 @@ ENV/
 
 # Environment variables - NEVER commit these (contain secrets)
 .env
+Backend/.env
 *.env
+
 
 # Google OAuth credentials - SENSITIVE
 token.json

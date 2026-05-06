@@ -8,6 +8,12 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import ALL models (important for metadata)
 import Models
+from dotenv import load_dotenv
+load_dotenv()
+
+# Override sqlalchemy.url from environment if present
+database_url = os.getenv("DATABASE_URL")
+
 from Models.User_Tables.User_Profile import Base
 from Models.User_Tables.User_Profile import user_profile_table
 from Models.User_Tables.User_Access import user_access_table
@@ -62,7 +68,7 @@ def include_object(object, name, type_, reflected, compare_to):
 
 
 def run_migrations_offline() -> None:
-    url = config.get_main_option("sqlalchemy.url")
+    url = database_url if database_url else config.get_main_option("sqlalchemy.url")
 
     context.configure(
         url=url,
@@ -79,11 +85,15 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    if database_url:
+        from sqlalchemy import create_engine
+        connectable = create_engine(database_url, poolclass=pool.NullPool)
+    else:
+        connectable = engine_from_config(
+            config.get_section(config.config_ini_section, {}),
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
 
     with connectable.connect() as connection:
         context.configure(

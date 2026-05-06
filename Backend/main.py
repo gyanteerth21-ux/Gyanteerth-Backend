@@ -47,17 +47,22 @@ def startup_db_sync():
         print(f"ALTER TABLE skipped/failed: {str(e)}")
 
 app.add_middleware(SessionMiddleware, secret_key="your_super_secret_key_here")
+# Read allowed origins from environment
+env_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://lms-vert-alpha.vercel.app",
+    "https://gyanteerth.vercel.app",
+    "https://gyanteerthlearning.online",
+    "https://www.gyanteerthlearning.online",
+]
+# Add any extra origins from .env
+origins.extend([o.strip() for o in env_origins if o.strip()])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "https://lms-vert-alpha.vercel.app",
-        "https://main.d32uqnjfa8len3.amplifyapp.com",
-        "https://main.d1anu9g2hwa2tv.amplifyapp.com",
-        "https://main.d32uqnjfa8len3.amplifyapp.com/",
-        "https://gyanteerth.vercel.app"
-    ],
+    allow_origins=origins,
     allow_origin_regex="https://.*\\.amplifyapp\\.com/?",
     allow_credentials=True,
     allow_methods=["*"],

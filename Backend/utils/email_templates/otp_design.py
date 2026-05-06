@@ -109,7 +109,12 @@ Committed towards excellence
 </html>
 """
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 def forget_password_email_template(token: str):
+    frontend_url = os.getenv("FRONTEND_URL", "https://gyanteerthlearning.online").rstrip('/')
     return f"""<!DOCTYPE html>
 <html>
 <head>
@@ -145,7 +150,7 @@ Click the link below to update  your account password.
 
 <tr>
 <td align="center" style="padding:30px 0;">
-<button><a href="https://gyanteerth.vercel.app/reset-password?token={token}" 
+<button><a href="{frontend_url}/reset-password?token={token}" 
 style="
 text-decoration:none;
 color:#ffffff;
