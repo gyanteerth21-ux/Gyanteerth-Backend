@@ -54,4 +54,4 @@ uvicorn==0.42.0
 yarl==1.23.0
 pandas
 openpyxl
-bcrypt
+bcrypt==3.2.0
