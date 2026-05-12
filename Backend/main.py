@@ -5,6 +5,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI,HTTPException,Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 import uvicorn
@@ -18,6 +20,10 @@ import time
 from Database.DB import query_times
 
 app = FastAPI()
+
+# Serve static files securely from the 'static' folder
+BASE_DIR = Path(__file__).resolve().parent
+app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 
 @app.on_event("startup")
 def startup_db_sync():
