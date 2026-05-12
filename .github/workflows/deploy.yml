@@ -1,40 +1,55 @@
 name: Deploy FastAPI Backend
 
 on:
-  push:
-    branches:
-      - main
+push:
+branches:
+- main
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
+deploy:
+runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+```
+steps:
+  - name: Checkout Code
+    uses: actions/checkout@v4
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY_BASE64 }}" | base64 -d > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+  - name: Setup SSH
+    run: |
+      mkdir -p ~/.ssh
+      echo "${{ secrets.EC2_SSH_KEY_BASE64 }}" | base64 -d > ~/.ssh/id_rsa
+      chmod 600 ~/.ssh/id_rsa
 
-      - name: Deploy to EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no \
-          -i ~/.ssh/id_rsa \
-          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+  - name: Deploy to EC2
+    run: |
+      ssh -o StrictHostKeyChecking=no \
+      -i ~/.ssh/id_rsa \
+      ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
 
-          cd /home/ubuntu/Gyanteerth-Backend
+      set -e
 
-          git pull origin main
+      cd /home/ubuntu/Gyanteerth-Backend
 
-          source venv/bin/activate
+      echo "Resetting local changes..."
+      git reset --hard HEAD
 
-          pip install -r Backend/requirements.txt
+      echo "Pulling latest code..."
+      git pull origin main
 
-          pm2 restart gyanteerth-backend --update-env || pm2 start "venv/bin/uvicorn Backend.main:app --host 0.0.0.0 --port 8000" --name gyanteerth-backend
+      echo "Activating virtual environment..."
+      source venv/bin/activate
 
-          pm2 save
+      echo "Installing dependencies..."
+      pip install -r Backend/requirements.txt
 
-          EOF
+      echo "Restarting backend..."
+      pm2 restart gyanteerth-backend --update-env || \
+      pm2 start "venv/bin/uvicorn Backend.main:app --host 0.0.0.0 --port 8000" \
+      --name gyanteerth-backend
+
+      pm2 save
+
+      echo "Deployment completed successfully."
+
+      EOF
+```
