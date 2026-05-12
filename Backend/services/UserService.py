@@ -6,6 +6,7 @@ import cloudinary
 import cloudinary.uploader
 from utils.Emailservice import send_email
 from Database.DB import get_db
+import os
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from dotenv import load_dotenv, find_dotenv
