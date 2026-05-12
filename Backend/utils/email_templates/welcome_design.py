@@ -62,7 +62,7 @@ def welcome_email_template(name, email, password, role):
     <body>
         <div class="email-container">
             <div class="header">
-                <img src="https://api.gyanteerthlearning.online/static/logo.png" style="width:180px;" alt="Gyanteerth"/>
+                <img src="https://api.gyanteerthlearning.online/static/logo.png?v=2" style="width:180px;" alt="Gyanteerth"/>
             </div>
             <div class="content">
                 <p>Hello <strong>{name}</strong>,</p>

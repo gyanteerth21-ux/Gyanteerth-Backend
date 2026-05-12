@@ -19,7 +19,7 @@ def course_active_template(course_id,course_title,content_type,course_duration,c
           <!-- Branded Header -->
           <tr>
             <td style="background:linear-gradient(90deg,#1db954,#00a86b);padding:30px;text-align:center;">
-              <img src="https://api.gyanteerthlearning.online/static/logo.png" style="width:180px;" alt="Gyanteerth"/>
+              <img src="https://api.gyanteerthlearning.online/static/logo.png?v=2" style="width:180px;" alt="Gyanteerth"/>
             </td>
           </tr>
         

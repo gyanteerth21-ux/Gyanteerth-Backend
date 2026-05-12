@@ -16,7 +16,7 @@ style="background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e
 
 <tr>
 <td style="background:linear-gradient(90deg,#1db954,#00a86b);padding:30px;text-align:center;">
-<img src="https://api.gyanteerthlearning.online/static/logo.png"
+<img src="https://api.gyanteerthlearning.online/static/logo.png?v=2"
 style="width:180px;margin-bottom:10px;" alt="Gyanteerth"/>
 </td>
 </tr>
