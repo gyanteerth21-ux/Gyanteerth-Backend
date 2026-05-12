@@ -43,9 +43,7 @@ steps:
       pip install -r Backend/requirements.txt
 
       echo "Restarting backend..."
-      pm2 restart gyanteerth-backend --update-env || \
-      pm2 start "venv/bin/uvicorn Backend.main:app --host 0.0.0.0 --port 8000" \
-      --name gyanteerth-backend
+      pm2 restart gyanteerth-backend --update-env || pm2 start "venv/bin/uvicorn Backend.main:app --host 0.0.0.0 --port 8000" --name gyanteerth-backend
 
       pm2 save
 
