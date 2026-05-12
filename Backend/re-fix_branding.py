@@ -2,10 +2,19 @@ import base64
 import os
 
 def run_fix():
-    # Load FULL Logo Data
+    # Load Logo Data
     with open('logo.png', 'rb') as f:
-        b64 = base64.b64encode(f.read()).decode()
-    data_url = f'data:image/png;base64,{b64}'
+        raw_data = f.read()
+        b64 = base64.b64encode(raw_data).decode()
+    
+    # Check if it's WebP or PNG
+    if raw_data.startswith(b'RIFF') and b'WEBP' in raw_data[:12]:
+        mime_type = "image/webp"
+    else:
+        mime_type = "image/png"
+        
+    data_url = f'data:{mime_type};base64,{b64}'
+    print(f"Detected MIME type: {mime_type}")
     
     t_dir = os.path.join('utils', 'email_templates')
     files = ['otp_design.py', 'courseactive.py', 'coursecreate.py', 'wecome_trainer_design.py', 'welcome_design.py']
@@ -13,7 +22,6 @@ def run_fix():
     for filename in files:
         path = os.path.join(t_dir, filename)
         if not os.path.exists(path):
-            print(f"Skipping {filename} - not found")
             continue
             
         with open(path, 'r', encoding='utf-8') as f:
@@ -22,9 +30,7 @@ def run_fix():
         new_lines = []
         updated = False
         for line in lines:
-            # Look for ANY img tag with src starting with data: or cloudinary
             if '<img' in line and 'src=' in line:
-                # Precision replace for the src attribute
                 start_marker = 'src="'
                 end_marker = '"'
                 start_idx = line.find(start_marker) + len(start_marker)
@@ -40,9 +46,7 @@ def run_fix():
         if updated:
             with open(path, 'w', encoding='utf-8') as f:
                 f.writelines(new_lines)
-            print(f"SUCCESS: Fully updated logo in {filename}")
-        else:
-            print(f"WARNING: No logo tag found in {filename}")
+            print(f"SUCCESS: Updated {filename} with {mime_type} header")
 
 if __name__ == "__main__":
     run_fix()
