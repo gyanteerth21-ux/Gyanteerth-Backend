@@ -90,7 +90,7 @@ Further updates regarding scheduling and activation will be shared soon.
 <!-- BUTTON -->
 <tr>
 <td align="center" style="padding:25px 0;">
-<a href="https://www.aruljayaraj.in/trainer-login"
+<a href="https://gyanteerthlearning.online/login"
 style="
 text-decoration:none;
 color:#ffffff;

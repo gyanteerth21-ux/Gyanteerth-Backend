@@ -167,3 +167,67 @@ class update_pass_response(BaseModel):
             "message": "Password updated successfully"
         }
         }
+
+
+# ── Student Self-Registration ──────────────────────────────────────────────────
+
+class StudentRegisterRequest(BaseModel):
+    name: str
+    email: EmailStr
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "Rahul Sharma",
+                "email": "rahul@gmail.com"
+            }
+        }
+
+
+class StudentRegisterResponse(BaseModel):
+    success: bool
+    message: str
+    user_id: str | None = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "success": True,
+                "message": "OTP sent to your email. Please verify to complete registration.",
+                "user_id": "USER-xxxx-xxxx"
+            }
+        }
+
+
+class StudentVerifyAndSetPasswordRequest(BaseModel):
+    user_id: str
+    otp: str
+    password: str
+    confirm_password: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "user_id": "USER-xxxx-xxxx",
+                "otp": "123456",
+                "password": "MyPass@123",
+                "confirm_password": "MyPass@123"
+            }
+        }
+
+    _validate_user_id = field_validator("user_id")(validate_user_id)
+    _validate_otp = field_validator("otp")(validate_otp)
+    _validate_password = field_validator("password")(validate_password)
+
+
+class StudentVerifyResponse(BaseModel):
+    success: bool
+    message: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "success": True,
+                "message": "Email verified and account created successfully. You can now log in."
+            }
+        }

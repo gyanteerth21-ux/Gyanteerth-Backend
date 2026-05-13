@@ -22,7 +22,8 @@ def welcome_email_template(name, email, password, role):
                 border-radius: 8px;
                 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             }}
-            .header { background: linear-gradient(90deg,#1db954,#00a86b) !important; {
+            .header {{
+                background: linear-gradient(90deg,#1db954,#00a86b) !important;
                 background-color: #4CAF50;
                 color: #ffffff;
                 text-align: center;
@@ -49,6 +50,20 @@ def welcome_email_template(name, email, password, role):
                 font-family: monospace;
                 font-size: 16px;
             }}
+            .button-container {{
+                text-align: center;
+                margin: 30px 0;
+            }}
+            .login-button {{
+                background: linear-gradient(90deg,#1db954,#00a86b) !important;
+                color: #ffffff !important;
+                padding: 12px 30px;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: bold;
+                display: inline-block;
+                box-shadow: 0 4px 15px rgba(29, 185, 84, 0.25);
+            }}
             .footer {{
                 text-align: center;
                 padding: 10px;
@@ -71,6 +86,9 @@ def welcome_email_template(name, email, password, role):
                 <div class="credentials">
                     <strong>Email:</strong> {email} <br>
                     <strong>Password:</strong> {password}
+                </div>
+                <div class="button-container">
+                    <a href="https://gyanteerthlearning.online/login" class="login-button">Login to Platform</a>
                 </div>
                 <p>If you have any questions or need assistance, please feel free to reach out to our support team.</p>
             </div>
