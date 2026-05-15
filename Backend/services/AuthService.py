@@ -180,6 +180,8 @@ class AuthService:
         
         user, access_record = result
         
+        print(f"DEBUG: PASSWORD LENGTH: {len(data.password)}")
+        
         if not verify_password(data.password, access_record.password_hash):
             raise HTTPException(status_code=400, detail="Invalid email or password")
         user_agent = request.headers.get("user-agent", "Unknown")
