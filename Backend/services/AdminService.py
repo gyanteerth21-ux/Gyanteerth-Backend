@@ -1824,6 +1824,7 @@ class AdminService:
                     "key_skill":course.skill_set,
                     "benefits":course.benefits,
                     "required_knowlegde":course.required_knowledge,
+                    "thumbnail": course.thumbnail,
                     "price": {
                         "original": course.original_pay,
                         "discount": course.discount_pay
