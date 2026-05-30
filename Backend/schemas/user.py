@@ -14,6 +14,9 @@ class UpdateUserProfileRequest(BaseModel):
     user_dob: date
     user_city: str
     user_state: str
+    user_college: str
+    user_branch: str
+    user_year: str
 
     @field_validator("user_name")
     @classmethod
@@ -46,6 +49,9 @@ class UserProfile_response(BaseModel):
     user_gender: Optional[GenderEnum] = None
     user_city: Optional[str] = None
     user_state: Optional[str] = None
+    user_college: Optional[str] = None
+    user_branch: Optional[str] = None
+    user_year: Optional[str] = None
     email_verified: Optional[bool] = None
 
     class Config:
@@ -60,6 +66,9 @@ class UserProfile_response(BaseModel):
                 "user_gender": "male",
                 "user_city": "New York",
                 "user_state": "NY",
+                "user_college": "ABC College",
+                "user_branch": "Computer Science",
+                "user_year": "3rd Year",
                 "email_verified": True
             }
         }
@@ -74,6 +83,9 @@ class update_profile_response(BaseModel):
     user_gender:GenderEnum
     user_city:str
     user_state:str
+    user_college:str | None
+    user_branch:str | None
+    user_year:str | None
     cloud_upload_time: float | None = None
     cloud_delete_time: float | None = None
     class Config:
@@ -89,6 +101,9 @@ class update_profile_response(BaseModel):
                 "user_gender": "male",
                 "user_city": "New York",
                 "user_state": "NY",
+                "user_college": "ABC College",
+                "user_branch": "Computer Science",
+                "user_year": "3rd Year",
                 "cloud_upload_time": 0.5,
                 "cloud_delete_time": 0.3
             }
