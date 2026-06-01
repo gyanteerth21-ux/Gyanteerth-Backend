@@ -31,6 +31,9 @@ async def update_profile(
     user_gender: Annotated[GenderEnum, Form(..., examples=["male"])],
     user_city: Annotated[str, Form(..., examples=["New York"])],
     user_state: Annotated[str, Form(..., examples=["NY"])],
+    user_college: Annotated[str, Form(..., examples=["ABC College"])],
+    user_branch: Annotated[str, Form(..., examples=["Computer Science"])],
+    user_year: Annotated[str, Form(..., examples=["3rd Year"])],
     user_pic: UploadFile | None = File(None),
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db),
@@ -42,7 +45,10 @@ async def update_profile(
             user_number=user_number,
             user_dob=user_dob,
             user_city=user_city,
-            user_state=user_state
+            user_state=user_state,
+            user_college=user_college,
+            user_branch=user_branch,
+            user_year=user_year
         )
 
         return await UserService().update_user_profile(

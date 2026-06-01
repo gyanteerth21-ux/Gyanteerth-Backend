@@ -26,6 +26,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, timedelta, timezone
 import uuid
 import re
+
 from datetime import datetime, timedelta
 from utils.security import hash_password,create_refresh_token
 from Models.Progress.EnrollmentTable import EnrollmentTable
@@ -1823,6 +1824,7 @@ class AdminService:
                     "key_skill":course.skill_set,
                     "benefits":course.benefits,
                     "required_knowlegde":course.required_knowledge,
+                    "thumbnail": course.thumbnail,
                     "price": {
                         "original": course.original_pay,
                         "discount": course.discount_pay

@@ -43,6 +43,9 @@ class UserService:
             "user_gender": user.user_gender,
             "user_city": user.user_city,
             "user_state": user.user_state,
+            "user_college": user.user_college,
+            "user_branch": user.user_branch,
+            "user_year": user.user_year,
             "email_verified": user.user_email_verified
         }
     
@@ -80,6 +83,9 @@ class UserService:
         user.user_gender = user_gender
         user.user_city = Data.user_city
         user.user_state = Data.user_state
+        user.user_college = Data.user_college
+        user.user_branch = Data.user_branch
+        user.user_year = Data.user_year
         user.updated_at = datetime.utcnow()
         db.commit()
         db.refresh(user)
@@ -94,6 +100,9 @@ class UserService:
             "user_gender": user.user_gender,
             "user_city": user.user_city,
             "user_state": user.user_state,
+            "user_college": user.user_college,
+            "user_branch": user.user_branch,
+            "user_year": user.user_year,
             "cloud_upload_time": cloud_end - cloud_start,
             "cloud_delete_time":cloud_dend - cloud_dstart
         }
