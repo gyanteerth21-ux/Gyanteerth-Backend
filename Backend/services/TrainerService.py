@@ -64,6 +64,9 @@ class TrainerService:
                 user_profile_table.user_id,
                 user_profile_table.user_name,
                 user_profile_table.user_email,
+                user_profile_table.user_college,
+                user_profile_table.user_branch,
+                user_profile_table.user_year,
                 CourseProgressTable.Progress_Percentage,
                 CourseProgressTable.Completed_Module,
                 CourseProgressTable.Total_Modules
@@ -85,6 +88,9 @@ class TrainerService:
                     "user_id": s.user_id,
                     "user_name": s.user_name,
                     "email": s.user_email,
+                    "user_college": s.user_college,
+                    "user_branch": s.user_branch,
+                    "user_year": s.user_year,
                     "progress_percentage": s.Progress_Percentage or 0,
                     "completed_modules": s.Completed_Module or 0,
                     "total_modules": s.Total_Modules or 0

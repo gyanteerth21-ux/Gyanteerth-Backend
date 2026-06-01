@@ -884,6 +884,9 @@ class StudentProgressDetail(BaseModel):
     user_id: str
     user_name: Optional[str]
     email: Optional[str]
+    user_college: Optional[str] = None
+    user_branch: Optional[str] = None
+    user_year: Optional[str] = None
     progress_percentage: int
     completed_modules: int
     total_modules: int
