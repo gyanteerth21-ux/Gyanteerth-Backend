@@ -26,8 +26,13 @@ def validate_email_config(force: bool = False):
         raise ValueError(err_msg)
     _config_validated = True
 
-# Load environment variables
-load_dotenv(find_dotenv())
+# Load environment variables with fallback to local Backend/.env
+dotenv_path = find_dotenv()
+if not dotenv_path:
+    fallback_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    if os.path.exists(fallback_path):
+        dotenv_path = fallback_path
+load_dotenv(dotenv_path)
 
 # Run validation on import (warning only, to avoid breaking startup if not configured yet)
 try:
