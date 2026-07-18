@@ -87,7 +87,7 @@ class SignupResponse(BaseModel):
         json_schema_extra = {
             "example": {
                 "exists": False,
-                "message": "OTP sent to your email",
+                "message": "Account created successfully",
                 "user_id": "USER-1234-abcd"
             }
         }
@@ -174,14 +174,20 @@ class update_pass_response(BaseModel):
 class StudentRegisterRequest(BaseModel):
     name: str
     email: EmailStr
+    password: str
+    confirm_password: str
 
     class Config:
         json_schema_extra = {
             "example": {
                 "name": "Rahul Sharma",
-                "email": "rahul@gmail.com"
+                "email": "rahul@gmail.com",
+                "password": "MyPass@123",
+                "confirm_password": "MyPass@123"
             }
         }
+
+    _validate_password = field_validator("password")(validate_password)
 
 
 class StudentRegisterResponse(BaseModel):
@@ -193,41 +199,9 @@ class StudentRegisterResponse(BaseModel):
         json_schema_extra = {
             "example": {
                 "success": True,
-                "message": "OTP sent to your email. Please verify to complete registration.",
+                "message": "Account created successfully. You can now log in.",
                 "user_id": "USER-xxxx-xxxx"
             }
         }
 
 
-class StudentVerifyAndSetPasswordRequest(BaseModel):
-    user_id: str
-    otp: str
-    password: str
-    confirm_password: str
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "user_id": "USER-xxxx-xxxx",
-                "otp": "123456",
-                "password": "MyPass@123",
-                "confirm_password": "MyPass@123"
-            }
-        }
-
-    _validate_user_id = field_validator("user_id")(validate_user_id)
-    _validate_otp = field_validator("otp")(validate_otp)
-    _validate_password = field_validator("password")(validate_password)
-
-
-class StudentVerifyResponse(BaseModel):
-    success: bool
-    message: str
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "success": True,
-                "message": "Email verified and account created successfully. You can now log in."
-            }
-        }

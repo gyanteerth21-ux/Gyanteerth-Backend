@@ -4,7 +4,7 @@ from fastapi import FastAPI,HTTPException,Request,APIRouter,Depends,Path
 from fastapi.responses import JSONResponse
 from schemas.Auth.signup import passwordrequest,SignupEmailRequest,OTPVerificationRequest,loginrequest,refresh_token_request,update_password_request
 from schemas.Auth.signup import SignupResponse,verify_otpResponse,uncomplete_passResponse,set_passwordResponse,refresh_token_response,loginresponse,forget_pass_response,update_pass_response
-from schemas.Auth.signup import StudentRegisterRequest, StudentRegisterResponse, StudentVerifyAndSetPasswordRequest, StudentVerifyResponse
+from schemas.Auth.signup import StudentRegisterRequest, StudentRegisterResponse
 from services.AuthService import AuthService, user_Authorization,admin_Authorization,trainer_Authorization 
 from Database.DB import get_db
 from sqlalchemy.orm import Session
@@ -21,6 +21,7 @@ async def read(token: object = Depends(user_Authorization())):
 
 @router_auth.get("/security_check_admin/")
 async def read(token: object = Depends(admin_Authorization())):
+
     return token
 
 @router_auth.get("/security_check_trainer/")
@@ -50,16 +51,15 @@ async def update_password(data: update_password_request, db: Session = Depends(g
     return await AuthService().update_password_service(data, db)
 
 
-# ── Student Self-Registration ──────────────────────────────────────────────────
+# Student Self-Registration
 
 @router_auth.post(
     "/register",
     response_model=StudentRegisterResponse,
-    summary="Student Registration – Step 1",
+    summary="Student Registration",
     description=(
-        "Register a new student account. "
-        "Provide your name and email. A 6-digit OTP will be sent to the email for verification. "
-        "The OTP expires in 5 minutes. Use the returned `user_id` in the verify step."
+        "Register a new student account with name, email, password, and confirm password. "
+        "The account is created immediately and can be used to log in."
     )
 )
 async def register_student(
@@ -68,21 +68,3 @@ async def register_student(
     db: Session = Depends(get_db)
 ):
     return await AuthService().register_student_service(data, background_tasks, db)
-
-
-@router_auth.post(
-    "/verify_registration",
-    response_model=StudentVerifyResponse,
-    summary="Student Registration – Step 2 (Verify Email & Set Password)",
-    description=(
-        "Complete registration by verifying the OTP sent to your email and setting your password. "
-        "Password must be at least 8 characters and contain uppercase, lowercase, a digit, and a special character. "
-        "Both `password` and `confirm_password` must match."
-    )
-)
-async def verify_registration(
-    data: StudentVerifyAndSetPasswordRequest,
-    db: Session = Depends(get_db)
-):
-    return await AuthService().verify_email_and_set_password_service(data, db)
-

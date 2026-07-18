@@ -1,5 +1,4 @@
 import uuid
-import random
 from datetime import datetime, timedelta
 from aiohttp import request
 from sqlalchemy.orm import Session
@@ -7,12 +6,11 @@ from fastapi import HTTPException,Request,Depends,status
 from fastapi.security import HTTPBearer,HTTPAuthorizationCredentials
 from Models.User_Tables.User_Profile import user_profile_table
 from Models.User_Tables.User_Refresh_Token import user_refresh_token_table
-from Models.User_Tables.User_OTP import user_otp_table
 from Models.User_Tables.User_Access import user_access_table
 from utils.Emailservice import send_email
 from sqlalchemy.exc import IntegrityError
 from Database.DB import get_db
-from utils.email_templates.otp_design import otp_email_template,forget_password_email_template
+from utils.email_templates.otp_design import forget_password_email_template
 from utils.security import hash_password, verify_password
 from utils.security import create_access_token, decode_token
 from utils.security import create_refresh_token,create_forget_token
@@ -316,14 +314,13 @@ class AuthService:
 
     async def register_student_service(self, data, background_tasks, db: Session):
         """
-        Step 1 – Register a new student.
-        Creates an unverified user profile and sends a 6-digit OTP to the email.
+        Register a new student without email OTP verification.
+        Creates an active, email-verified user profile and credentials record.
         """
         try:
-            # Check if a verified account already exists for this email
+            print("Error is not here ")
             existing = db.query(user_profile_table).filter(
-                user_profile_table.user_email == data.email,
-                user_profile_table.user_email_verified == True
+                user_profile_table.user_email == data.email
             ).first()
 
             if existing:
@@ -332,61 +329,35 @@ class AuthService:
                     detail="An account with this email already exists. Please log in."
                 )
 
-            # If an unverified profile exists, reuse it (allow re-sending OTP)
-            unverified = db.query(user_profile_table).filter(
-                user_profile_table.user_email == data.email,
-                user_profile_table.user_email_verified == False
-            ).first()
+            if data.password != data.confirm_password:
+                raise HTTPException(status_code=400, detail="Passwords do not match.")
 
-            if unverified:
-                user_id = unverified.user_id
-                # Update name in case it changed
-                unverified.user_name = data.name
-            else:
-                user_id = f"USER-{uuid.uuid4()}"
-                new_user = user_profile_table(
-                    user_id=user_id,
-                    user_name=data.name,
-                    user_email=data.email,
-                    user_email_verified=False,
-                    Status="Pending"
-                )
-                db.add(new_user)
-                db.flush()
+            user_id = f"USER-{uuid.uuid4()}"
+            new_user = user_profile_table(
+                user_id=user_id,
+                user_name=data.name,
+                user_email=data.email,
+                user_email_verified=True,
+                Status="Active"
+            )
+            db.add(new_user)
+            db.flush()
 
-            # Generate a 6-digit OTP
-            otp_value = random.randint(100000, 999999)
-            expires_at = datetime.utcnow() + timedelta(minutes=5)
-
-            # Upsert OTP record (one OTP row per user)
-            existing_otp = db.query(user_otp_table).filter(
-                user_otp_table.user_id == user_id
-            ).first()
-
-            if existing_otp:
-                existing_otp.otp = otp_value
-                existing_otp.expires_at = expires_at
-                existing_otp.is_used = False
-            else:
-                new_otp = user_otp_table(
-                    otp_id=f"OTP-{uuid.uuid4()}",
-                    user_id=user_id,
-                    otp=otp_value,
-                    expires_at=expires_at,
-                    is_used=False
-                )
-                db.add(new_otp)
+            access = user_access_table(
+                access_id=f"Access-{uuid.uuid4()}",
+                user_id=user_id,
+                provider_id=f"Email-{uuid.uuid4()}",
+                provider_name="Email",
+                role="user",
+                password_hash=hash_password(data.password)
+            )
+            db.add(access)
 
             db.commit()
 
-            # Send OTP email in background
-            subject = "Verify your Gyanteerth account"
-            body = otp_email_template(str(otp_value))
-            background_tasks.add_task(send_email, data.email, subject, body)
-
             return {
                 "success": True,
-                "message": "OTP sent to your email. Please verify to complete registration.",
+                "message": "Account created successfully. You can now log in.",
                 "user_id": user_id
             }
 
@@ -396,75 +367,3 @@ class AuthService:
             db.rollback()
             raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
 
-    async def verify_email_and_set_password_service(self, data, db: Session):
-        """
-        Step 2 – Verify OTP and set password to complete registration.
-        Marks the user as verified and creates the access (credentials) record.
-        """
-        try:
-            # Validate passwords match
-            if data.password != data.confirm_password:
-                raise HTTPException(status_code=400, detail="Passwords do not match.")
-
-            # Load the pending user
-            user = db.query(user_profile_table).filter(
-                user_profile_table.user_id == data.user_id,
-                user_profile_table.user_email_verified == False
-            ).first()
-
-            if not user:
-                raise HTTPException(
-                    status_code=404,
-                    detail="User not found or email is already verified."
-                )
-
-            # Validate OTP
-            otp_record = db.query(user_otp_table).filter(
-                user_otp_table.user_id == data.user_id,
-                user_otp_table.is_used == False,
-                user_otp_table.expires_at > datetime.utcnow()
-            ).first()
-
-            if not otp_record:
-                raise HTTPException(status_code=400, detail="OTP is invalid or has expired.")
-
-            if str(otp_record.otp) != data.otp:
-                raise HTTPException(status_code=400, detail="Incorrect OTP.")
-
-            # Mark OTP as used
-            otp_record.is_used = True
-
-            # Mark email as verified & activate user
-            user.user_email_verified = True
-            user.Status = "Active"
-
-            # Create access (credentials) record only if not already existing
-            existing_access = db.query(user_access_table).filter(
-                user_access_table.user_id == data.user_id
-            ).first()
-
-            if not existing_access:
-                access = user_access_table(
-                    access_id=f"Access-{uuid.uuid4()}",
-                    user_id=data.user_id,
-                    provider_id=f"Email-{uuid.uuid4()}",
-                    provider_name="Email",
-                    role="user",
-                    password_hash=hash_password(data.password)
-                )
-                db.add(access)
-            else:
-                existing_access.password_hash = hash_password(data.password)
-
-            db.commit()
-
-            return {
-                "success": True,
-                "message": "Email verified and account created successfully. You can now log in."
-            }
-
-        except HTTPException:
-            raise
-        except Exception as e:
-            db.rollback()
-            raise HTTPException(status_code=500, detail=f"Verification failed: {str(e)}")
