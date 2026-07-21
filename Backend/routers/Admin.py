@@ -643,3 +643,8 @@ async def get_assessment_reset_requests_api(db: Session = Depends(get_db), token
 async def handle_assessment_reset_request_api(request_id: str, request: AdminAssessmentResetActionRequest, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
     return await AdminService().handle_assessment_reset_request(request_id, request.action, db)
 
+from schemas.admin import AdminAllStudentsResponse
+
+@router_admin.get("/students", response_model=AdminAllStudentsResponse, summary="Get All Students", description="Returns a list of all students with their enrollments and progress.")
+async def get_all_students_api(db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().get_all_students_service(db)

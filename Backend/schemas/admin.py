@@ -936,4 +936,22 @@ class AdminAssessmentResetActionRequest(BaseModel):
 class AdminAssessmentResetActionResponse(BaseModel):
     status: bool
     message: str
-
+
+class AdminStudentEnrollmentDetail(BaseModel):
+    course_id: str
+    course_title: str
+    progress: int
+
+class AdminStudentDetail(BaseModel):
+    user_id: str
+    name: Optional[str]
+    email: str
+    college: Optional[str]
+    branch: Optional[str]
+    year: Optional[str]
+    enrollments: List[AdminStudentEnrollmentDetail] = []
+    avgProgress: int = 0
+
+class AdminAllStudentsResponse(BaseModel):
+    status: bool
+    data: List[AdminStudentDetail]
