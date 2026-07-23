@@ -158,4 +158,11 @@ async def get_certificate_details_api(course_id: str, db: Session = Depends(get_
 async def verify_certificate_api(certificate_id: str, db: Session = Depends(get_db)):
     return await UserService().verify_certificate(certificate_id=certificate_id, db=db)
 
-
+@router_user.get("/colleges", summary="Get All Colleges")
+async def get_all_colleges_api(db: Session = Depends(get_db)):
+    return await UserService().get_all_colleges(db)
+
+
+@router_user.get("/branches", summary="Get All Branches for Dropdown")
+async def get_all_branches_public_api(db: Session = Depends(get_db)):
+    return await UserService().get_all_branches_public(db)

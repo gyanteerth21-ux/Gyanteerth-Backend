@@ -16,6 +16,7 @@ from routers.Auth import router_auth
 from routers.user import router_user
 from routers.Admin import router_admin
 from routers.Trainer import router_trainer
+from routers.Tpo import router_tpo
 import time
 from Database.DB import query_times
 
@@ -30,10 +31,14 @@ def startup_db_sync():
     from Database.DB import engine
     from sqlalchemy import text
     from Models.Progress.AssessmentAnswerTable import AssessmentAnswerTable
+    from Models.College_Tables.College import CollegeTable
+    from Models.Branch_Tables.Branch import BranchTable
     
     try:
         # Ensure new tables like AssessmentAnswerTable are created FIRST
         AssessmentAnswerTable.metadata.create_all(bind=engine)
+        CollegeTable.metadata.create_all(bind=engine)
+        BranchTable.metadata.create_all(bind=engine)
         print("Database tables sync completed successfully on startup.")
     except Exception as e:
         print(f"Database tables sync failed: {str(e)}")
@@ -110,6 +115,7 @@ app.include_router(router_auth,prefix="/gyantreeth/v1/auth_checkpoint",tags=["Au
 app.include_router(router_user,prefix="/gyantreeth/v1/user",tags=["User"])
 app.include_router(router_admin,prefix="/gyantreeth/v1/admin",tags=["Admin"])
 app.include_router(router_trainer,prefix="/gyantreeth/v1/trainer",tags=["Trainer"])
+app.include_router(router_tpo,prefix="/gyantreeth/v1/tpo",tags=["TPO"])
 
 if __name__ == "__main__":
     uvicorn.run("main:app",host="0.0.0.0",port=8000,reload=True)

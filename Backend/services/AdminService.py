@@ -2946,3 +2946,212 @@ class AdminService:
                 status_code=500,
                 detail=f"Failed to fetch students: {str(e)}"
             )
+
+    async def get_all_colleges(self, db: Session, token: dict):
+        from Models.College_Tables.College import CollegeTable
+        colleges = db.query(CollegeTable).all()
+        return {"status": True, "data": colleges}
+
+    async def create_college(self, data, db: Session, token: dict):
+        from Models.College_Tables.College import CollegeTable
+        existing = db.query(CollegeTable).filter(CollegeTable.College_Name == data.College_Name).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="College already exists")
+        
+        new_college = CollegeTable(
+            College_ID=f"COLLEGE-{uuid.uuid4()}",
+            College_Name=data.College_Name
+        )
+        db.add(new_college)
+        db.commit()
+        db.refresh(new_college)
+        return {"status": True, "data": new_college}
+
+    async def update_college(self, college_id: str, data, db: Session, token: dict):
+        from Models.College_Tables.College import CollegeTable
+        college = db.query(CollegeTable).filter(CollegeTable.College_ID == college_id).first()
+        if not college:
+            raise HTTPException(status_code=404, detail="College not found")
+        
+        college.College_Name = data.College_Name
+        db.commit()
+        db.refresh(college)
+        return {"status": True, "data": college}
+
+    async def delete_college(self, college_id: str, db: Session, token: dict):
+        from Models.College_Tables.College import CollegeTable
+        college = db.query(CollegeTable).filter(CollegeTable.College_ID == college_id).first()
+        if not college:
+            raise HTTPException(status_code=404, detail="College not found")
+        
+        db.delete(college)
+        db.commit()
+        return {"status": True, "message": "College deleted successfully"}
+
+
+    async def get_all_tpos(self, db: Session):
+        try:
+            tpos = db.query(
+                user_profile_table.user_id,
+                user_profile_table.user_name,
+                user_profile_table.user_email,
+                user_profile_table.user_number,
+                user_profile_table.user_college,
+                user_profile_table.created_at,
+                user_profile_table.Status
+            ).join(
+                user_access_table, user_profile_table.user_id == user_access_table.user_id
+            ).filter(
+                user_access_table.role == "tpo"
+            ).all()
+
+            result = []
+            for tpo in tpos:
+                result.append({
+                    "user_id": tpo.user_id,
+                    "name": tpo.user_name,
+                    "email": tpo.user_email,
+                    "number": tpo.user_number,
+                    "college": tpo.user_college,
+                    "created_at": tpo.created_at.isoformat() if tpo.created_at else None,
+                    "status": tpo.Status
+                })
+            return {"status": "Success", "tpos": result}
+        except Exception as e:
+            print("Error fetching TPOs:", e)
+            raise HTTPException(status_code=500, detail="Failed to fetch TPOs")
+
+    async def create_tpo_services(self, Data, background_tasks, token: dict, db: Session):
+        tpo = db.query(user_profile_table).filter(
+            user_profile_table.user_email == Data.tpo_email
+        ).first()
+    
+        if tpo:
+            raise HTTPException(status_code=400, detail="TPO with this email already exists")
+    
+        try:
+            new_tpo = user_profile_table(
+                user_id=f"USER-{uuid.uuid4()}",
+                user_email=Data.tpo_email,
+                user_name=Data.tpo_name,
+                user_number=Data.tpo_number,
+                user_college=Data.tpo_college,
+                user_email_verified=True,
+                Status="Active"
+            )
+    
+            db.add(new_tpo)
+            db.commit()
+            db.refresh(new_tpo)
+    
+            refresh_token = create_refresh_token(new_tpo.user_id)
+    
+            tpo_refresh_token = user_refresh_token_table(
+                refresh_token_id=f"RefreshToken-{uuid.uuid4()}",
+                user_id=new_tpo.user_id,
+                refresh_token=refresh_token,
+                ip_address="admin_created",
+                user_agent="admin_created",
+                device_name="admin_created",
+                expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+                is_revoked=False
+            )
+    
+            access = user_access_table(
+                access_id=f"Access-{uuid.uuid4()}",
+                user_id=new_tpo.user_id,
+                provider_id=f"Email-{uuid.uuid4()}",
+                provider_name="Email",
+                role="tpo",
+                password_hash=hash_password(Data.tpo_pass)
+            )
+    
+            db.add_all([access, tpo_refresh_token])
+            db.commit()
+    
+            subject = "Welcome to Gyanteerth - TPO Account Created"
+            body = welcome_trainer_template(
+                Data.tpo_name,
+                Data.tpo_email,
+                Data.tpo_pass
+            )
+    
+            background_tasks.add_task(
+                send_email,
+                Data.tpo_email,
+                subject,
+                body
+            )
+    
+            return {"message": "TPO profile created successfully"}
+    
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(
+                status_code=500,
+                detail=f"An error occurred while creating the TPO profile: {str(e)}"
+            )
+    async def get_all_branches(self, db: Session, token: dict = None):
+        from Models.Branch_Tables.Branch import BranchTable
+        branches = db.query(BranchTable).all()
+        return {"status": True, "data": [{"branch_id": b.branch_id, "branch_name": b.branch_name} for b in branches]}
+
+    async def create_branch(self, request, db: Session, token: dict):
+        from Models.Branch_Tables.Branch import BranchTable
+        try:
+            existing = db.query(BranchTable).filter(BranchTable.branch_name.ilike(request.Branch_Name)).first()
+            if existing:
+                from fastapi import HTTPException
+                raise HTTPException(status_code=400, detail="Branch already exists")
+            
+            new_branch = BranchTable(branch_name=request.Branch_Name)
+            db.add(new_branch)
+            db.commit()
+            db.refresh(new_branch)
+            
+            return {"status": True, "message": "Branch created successfully", "data": {"branch_id": new_branch.branch_id, "branch_name": new_branch.branch_name}}
+        except Exception as e:
+            db.rollback()
+            from fastapi import HTTPException
+            if isinstance(e, HTTPException): raise e
+            raise HTTPException(status_code=500, detail=str(e))
+
+    async def update_branch(self, branch_id: str, request, db: Session, token: dict):
+        from Models.Branch_Tables.Branch import BranchTable
+        try:
+            branch = db.query(BranchTable).filter(BranchTable.branch_id == branch_id).first()
+            from fastapi import HTTPException
+            if not branch:
+                raise HTTPException(status_code=404, detail="Branch not found")
+                
+            existing = db.query(BranchTable).filter(BranchTable.branch_name.ilike(request.Branch_Name), BranchTable.branch_id != branch_id).first()
+            if existing:
+                raise HTTPException(status_code=400, detail="Another branch with this name already exists")
+                
+            branch.branch_name = request.Branch_Name
+            db.commit()
+            db.refresh(branch)
+            
+            return {"status": True, "message": "Branch updated successfully"}
+        except Exception as e:
+            db.rollback()
+            from fastapi import HTTPException
+            if isinstance(e, HTTPException): raise e
+            raise HTTPException(status_code=500, detail=str(e))
+
+    async def delete_branch(self, branch_id: str, db: Session, token: dict):
+        from Models.Branch_Tables.Branch import BranchTable
+        try:
+            branch = db.query(BranchTable).filter(BranchTable.branch_id == branch_id).first()
+            from fastapi import HTTPException
+            if not branch:
+                raise HTTPException(status_code=404, detail="Branch not found")
+                
+            db.delete(branch)
+            db.commit()
+            return {"status": True, "message": "Branch deleted successfully"}
+        except Exception as e:
+            db.rollback()
+            from fastapi import HTTPException
+            if isinstance(e, HTTPException): raise e
+            raise HTTPException(status_code=500, detail=str(e))

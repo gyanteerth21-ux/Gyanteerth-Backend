@@ -954,4 +954,49 @@ class AdminStudentDetail(BaseModel):
 
 class AdminAllStudentsResponse(BaseModel):
     status: bool
-    data: List[AdminStudentDetail]
+    data: List[AdminStudentDetail]
+
+class CreateCollegeRequest(BaseModel):
+    College_Name: str
+
+class CollegeResponse(BaseModel):
+    College_ID: str
+    College_Name: str
+    created_at: datetime
+    updated_at: datetime
+
+class UpdateCollegeRequest(BaseModel):
+    College_Name: str
+
+class TpoRequest(BaseModel):
+    tpo_email: EmailStr
+    tpo_name: str 
+    tpo_pass :str
+    tpo_number: int
+    tpo_college: str
+
+    @field_validator("tpo_name")
+    @classmethod
+    def validate_username(cls, value: str):
+        if not re.fullmatch(r"[A-Za-z\s]+", value):
+            raise ValueError("Username must contain only letters and spaces")
+        return value
+    
+    @field_validator("tpo_number")
+    @classmethod
+    def validate_phone(cls, value: int):
+        if not isinstance(value, int):
+            raise ValueError("Phone number must be an integer")
+        if len(str(value)) != 10:
+            raise ValueError("Phone number must be exactly 10 digits")
+        return value
+    
+    _validate_password = field_validator("tpo_pass")(validate_password)class CreateBranchRequest(BaseModel):
+    Branch_Name: str
+
+class UpdateBranchRequest(BaseModel):
+    Branch_Name: str
+
+class BranchResponse(BaseModel):
+    branch_id: str
+    branch_name: str

@@ -369,3 +369,13 @@ class UserService:
             }
         }
 
+    async def get_all_colleges(self, db: Session):
+        from Models.College_Tables.College import CollegeTable
+        colleges = db.query(CollegeTable).all()
+        return {"status": True, "data": colleges}
+
+
+    async def get_all_branches_public(self, db: Session):
+        from Models.Branch_Tables.Branch import BranchTable
+        branches = db.query(BranchTable).all()
+        return {"status": True, "data": [{"branch_id": b.branch_id, "branch_name": b.branch_name} for b in branches]}

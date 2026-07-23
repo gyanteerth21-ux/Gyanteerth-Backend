@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from schemas.Auth.signup import passwordrequest,SignupEmailRequest,OTPVerificationRequest,loginrequest,refresh_token_request,update_password_request
 from schemas.Auth.signup import SignupResponse,verify_otpResponse,uncomplete_passResponse,set_passwordResponse,refresh_token_response,loginresponse,forget_pass_response,update_pass_response
 from schemas.Auth.signup import StudentRegisterRequest, StudentRegisterResponse
-from services.AuthService import AuthService, user_Authorization,admin_Authorization,trainer_Authorization 
+from services.AuthService import AuthService, user_Authorization, admin_Authorization, trainer_Authorization, tpo_Authorization
 from Database.DB import get_db
 from sqlalchemy.orm import Session
 from fastapi import Request
@@ -26,6 +26,10 @@ async def read(token: object = Depends(admin_Authorization())):
 
 @router_auth.get("/security_check_trainer/")
 async def read(token: object = Depends(trainer_Authorization())):
+    return token
+
+@router_auth.get("/security_check_tpo/")
+async def read_tpo(token: object = Depends(tpo_Authorization())):
     return token
 
 

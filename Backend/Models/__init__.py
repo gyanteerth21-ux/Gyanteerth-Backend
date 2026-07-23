@@ -13,3 +13,4 @@ from .Course_Tables.Recorded_live import *
 from .Course_Tables.Course_Demo import *
 from .Progress.AssessmentResetRequestTable import *
 from .Progress.AssessmentAnswerTable import *
+from .College_Tables.College import *

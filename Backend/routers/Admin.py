@@ -648,3 +648,47 @@ from schemas.admin import AdminAllStudentsResponse
 @router_admin.get("/students", response_model=AdminAllStudentsResponse, summary="Get All Students", description="Returns a list of all students with their enrollments and progress.")
 async def get_all_students_api(db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
     return await AdminService().get_all_students_service(db)
+
+from schemas.admin import CreateCollegeRequest, CollegeResponse, UpdateCollegeRequest, TpoRequest
+
+@router_admin.get("/colleges", summary="Get All Colleges")
+async def get_all_colleges_api(db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().get_all_colleges(db, token)
+
+@router_admin.post("/colleges", summary="Create College")
+async def create_college_api(request: CreateCollegeRequest, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().create_college(request, db, token)
+
+@router_admin.put("/colleges/{college_id}", summary="Update College")
+async def update_college_api(college_id: str, request: UpdateCollegeRequest, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().update_college(college_id, request, db, token)
+
+@router_admin.delete("/colleges/{college_id}", summary="Delete College")
+async def delete_college_api(college_id: str, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().delete_college(college_id, db, token)
+
+
+@router_admin.get("/tpos", summary="Get All TPOs")
+async def get_tpos_api(db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().get_all_tpos(db)
+
+@router_admin.post("/tpo", summary="Create TPO")
+async def create_tpo_api(request: TpoRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().create_tpo_services(request, background_tasks, token, db)
+from schemas.admin import CreateBranchRequest, UpdateBranchRequest, BranchResponse
+
+@router_admin.get("/branches", summary="Get All Branches")
+async def get_all_branches_api(db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().get_all_branches(db, token)
+
+@router_admin.post("/branches", summary="Create Branch")
+async def create_branch_api(request: CreateBranchRequest, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().create_branch(request, db, token)
+
+@router_admin.put("/branches/{branch_id}", summary="Update Branch")
+async def update_branch_api(branch_id: str, request: UpdateBranchRequest, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().update_branch(branch_id, request, db, token)
+
+@router_admin.delete("/branches/{branch_id}", summary="Delete Branch")
+async def delete_branch_api(branch_id: str, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().delete_branch(branch_id, db, token)
