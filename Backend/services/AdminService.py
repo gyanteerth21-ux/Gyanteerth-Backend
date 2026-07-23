@@ -2510,6 +2510,15 @@ class AdminService:
                     college_name = row.get('College_Name', None)
                     if pd.isna(college_name): college_name = None
 
+                    college_id = None
+                    if college_name:
+                        from Models.College_Tables.College import CollegeTable
+                        coll_obj = db.query(CollegeTable).filter(CollegeTable.College_Name == college_name).first()
+                        if coll_obj:
+                            college_id = coll_obj.College_ID
+                        else:
+                            college_id = str(college_name)
+
                     user_id = f"USER-{uuid.uuid4()}"
                     
                     new_user = user_profile_table(
@@ -2522,7 +2531,7 @@ class AdminService:
                         user_gender=gender,
                         user_city=city,
                         user_state=state,
-                        user_college=college_name,
+                        user_college=college_id,
                         user_email_verified=True,
                         Status="Active"
                     )
