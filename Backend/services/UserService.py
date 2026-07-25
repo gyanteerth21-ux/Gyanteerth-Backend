@@ -293,6 +293,8 @@ class UserService:
         }
 
     async def get_certificate_details(self, user_id: str, course_id: str, db: Session):
+        raise HTTPException(status_code=400, detail="Certificates are coming soon!")
+        
         from Models.Progress.CourseProgressTable import CourseProgressTable
         from Models.Certificate_Table.Certificate_table import CertificateTable
         import random
