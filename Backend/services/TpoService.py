@@ -14,60 +14,8 @@ class TpoService:
         
         tpo_college = tpo.user_college
 
-        users = db.query(user_profile_table).join(
-            user_access_table,
-            user_access_table.user_id == user_profile_table.user_id
-        ).filter(
-            user_access_table.role == "user",
-            user_profile_table.user_college == tpo_college
-        ).all()
-
-        user_dict = {
-            u.user_id: {
-                "user_id": u.user_id,
-                "name": u.user_name,
-                "email": u.user_email,
-                "college": getattr(u, "user_college", None),
-                "branch": getattr(u, "user_branch", None),
-                "year": getattr(u, "user_year", None),
-                "enrollments": [],
-                "avgProgress": 0,
-                "_total_progress": 0
-            }
-            for u in users
-        }
-
-        enrollments = db.query(
-            EnrollmentTable.User_ID,
-            EnrollmentTable.Course_ID,
-            CourseTable.course_title,
-            CourseProgressTable.Progress_Percentage
-        ).join(
-            CourseTable, CourseTable.course_id == EnrollmentTable.Course_ID
-        ).outerjoin(
-            CourseProgressTable,
-            (CourseProgressTable.User_ID == EnrollmentTable.User_ID) & 
-            (CourseProgressTable.Course_ID == EnrollmentTable.Course_ID)
-        ).all()
-
-        for e in enrollments:
-            uid = e.User_ID
-            if uid in user_dict:
-                prog = e.Progress_Percentage or 0
-                user_dict[uid]["enrollments"].append({
-                    "course_id": e.Course_ID,
-                    "course_title": e.course_title,
-                    "progress": prog
-                })
-                user_dict[uid]["_total_progress"] += prog
-
-        for u in user_dict.values():
-            count = len(u["enrollments"])
-            if count > 0:
-                u["avgProgress"] = round(u["_total_progress"] / count)
-            del u["_total_progress"]
-        
-        sorted_students = sorted(list(user_dict.values()), key=lambda x: x["avgProgress"], reverse=True)
+        from utils.student_utils import get_all_students_progress
+        sorted_students = get_all_students_progress(db, tpo_college)
 
         return {
             "status": True,
