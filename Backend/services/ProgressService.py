@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import exists, and_, func
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import uuid
 
 # Models
@@ -23,6 +23,9 @@ from Models.Progress.AssessmentResetRequestTable import AssessmentResetRequestTa
 
 class ProgressService:
     async def mark_video_progress(self, user_id: str, course_id: str, module_id: str, video_id: str, db: Session):
+        IST = timezone(timedelta(hours=5, minutes=30))
+        now_ist = datetime.now(IST).replace(tzinfo=None)
+        
         existing = db.query(VideoProgressTable).filter(
             VideoProgressTable.User_ID == user_id,
             VideoProgressTable.Video_ID == video_id
@@ -34,7 +37,7 @@ class ProgressService:
                 User_ID=user_id,
                 Video_ID=video_id,
                 Module_ID=module_id,
-                Completed_At=datetime.utcnow()
+                Completed_At=now_ist
             )
             db.add(new_prog)
             db.commit()
@@ -44,7 +47,10 @@ class ProgressService:
 
         return {"message": "Video marked as completed successfully"}
 
-    async def submit_assessment(self, user_id: str, course_id: str, module_id: str, assessment_id: str, answers: dict[str, str], db: Session):
+    async def submit_assessment(self, user_id: str, course_id: str, module_id: str, assessment_id: str, answers: dict[str, str], time_taken_seconds: int, db: Session):
+        IST = timezone(timedelta(hours=5, minutes=30))
+        now_ist = datetime.now(IST).replace(tzinfo=None)
+        
         # 1. Fetch assessment details
         assessment = db.query(AssessmentTable).filter(AssessmentTable.Assessment_ID == assessment_id).first()
         if not assessment:
@@ -116,7 +122,8 @@ class ProgressService:
             attempt.Attempt_No = attempt_no
             if passed:
                 attempt.Status = new_status
-            attempt.Completed_At = datetime.utcnow()
+            attempt.Completed_At = now_ist
+            attempt.created_at = now_ist - timedelta(seconds=time_taken_seconds)
         else:
             target_attempt_id = f"ATTEMPT-{uuid.uuid4().hex[:8]}"
             new_attempt = AssessmentAttemptTable(
@@ -127,7 +134,8 @@ class ProgressService:
                 Score=score,
                 Attempt_No=attempt_no,
                 Status=new_status,
-                Completed_At=datetime.utcnow()
+                Completed_At=now_ist,
+                created_at=now_ist - timedelta(seconds=time_taken_seconds)
             )
             db.add(new_attempt)
             db.flush()  # Ensure attempt is saved before answers reference it
@@ -142,7 +150,7 @@ class ProgressService:
                     Question_ID=ans["Question_ID"],
                     Option_ID=ans["Option_ID"],
                     Is_Correct=ans["Is_Correct"],
-                    created_at=datetime.utcnow()
+                    created_at=now_ist
                 )
                 db.add(new_ans)
 
@@ -222,12 +230,12 @@ class ProgressService:
                 Course_ID=course_id,
                 Module_ID=module_id,
                 Status="Completed",
-                Completed_At=datetime.utcnow()
+                Completed_At=now_ist
             )
             db.add(mod_prog)
         else:
             mod_prog.Status = "Completed"
-            mod_prog.Completed_At = datetime.utcnow()
+            mod_prog.Completed_At = now_ist
 
         db.commit()
 
@@ -320,7 +328,7 @@ class ProgressService:
                 Completed_Module=completed_modules,
                 Total_Modules=total_modules,
                 Progress_Percentage=percent,
-                Completed_At=datetime.utcnow() if percent == 100 else None
+                Completed_At=now_ist if percent == 100 else None
             )
             db.add(course_prog)
         else:
@@ -328,7 +336,7 @@ class ProgressService:
             course_prog.Total_Modules = total_modules
             course_prog.Progress_Percentage = percent
             if percent == 100 and not course_prog.Completed_At:
-                course_prog.Completed_At = datetime.utcnow()
+                course_prog.Completed_At = now_ist
 
         db.commit()
 
@@ -444,7 +452,7 @@ class ProgressService:
             Assessment_ID=assessment_id,
             Reason=reason,
             Status="Pending",
-            Requested_At=datetime.utcnow()
+            Requested_At=now_ist
         )
         db.add(new_request)
         db.commit()

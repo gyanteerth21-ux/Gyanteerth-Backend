@@ -110,6 +110,7 @@ async def submit_assessment_api(request: SubmitAssessmentRequest, db: Session = 
         module_id=request.module_id,
         assessment_id=request.assessment_id,
         answers=request.answers,
+        time_taken_seconds=request.time_taken_seconds,
         db=db
     )
 

@@ -129,6 +129,7 @@ class SubmitAssessmentRequest(BaseModel):
     module_id: str
     assessment_id: str
     answers: dict[str, str]  # mapping of question_id to selected option_id
+    time_taken_seconds: int = 0
 
 class SubmitAssessmentResponse(BaseModel):
     message: str
