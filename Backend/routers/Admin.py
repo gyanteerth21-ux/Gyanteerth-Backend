@@ -681,6 +681,10 @@ from schemas.admin import CreateBranchRequest, UpdateBranchRequest, BranchRespon
 async def get_all_branches_api(db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
     return await AdminService().get_all_branches(db, token)
 
+@router_admin.get("/degrees", summary="Get All Degrees")
+async def get_all_degrees_api(db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().get_all_degrees(db, token)
+
 @router_admin.post("/branches", summary="Create Branch")
 async def create_branch_api(request: CreateBranchRequest, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
     return await AdminService().create_branch(request, db, token)
@@ -692,3 +696,21 @@ async def update_branch_api(branch_id: str, request: UpdateBranchRequest, db: Se
 @router_admin.delete("/branches/{branch_id}", summary="Delete Branch")
 async def delete_branch_api(branch_id: str, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
     return await AdminService().delete_branch(branch_id, db, token)
+
+from schemas.admin import CreateDegreeRequest, UpdateDegreeRequest, DegreeResponse
+
+@router_admin.get("/degrees", summary="Get All Degrees")
+async def get_all_degrees_api(db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().get_all_degrees(db, token)
+
+@router_admin.post("/degrees", summary="Create Degree")
+async def create_degree_api(request: CreateDegreeRequest, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().create_degree(request, db, token)
+
+@router_admin.put("/degrees/{degree_id}", summary="Update Degree")
+async def update_degree_api(degree_id: str, request: UpdateDegreeRequest, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().update_degree(degree_id, request, db, token)
+
+@router_admin.delete("/degrees/{degree_id}", summary="Delete Degree")
+async def delete_degree_api(degree_id: str, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().delete_degree(degree_id, db, token)

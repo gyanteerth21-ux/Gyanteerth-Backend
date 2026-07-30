@@ -1000,3 +1000,13 @@ class UpdateBranchRequest(BaseModel):
 class BranchResponse(BaseModel):
     branch_id: str
     branch_name: str
+
+class CreateDegreeRequest(BaseModel):
+    Degree_Name: str
+
+class UpdateDegreeRequest(BaseModel):
+    Degree_Name: str
+
+class DegreeResponse(BaseModel):
+    degree_id: str
+    degree_name: str

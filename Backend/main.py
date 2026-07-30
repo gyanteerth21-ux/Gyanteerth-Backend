@@ -33,12 +33,14 @@ def startup_db_sync():
     from Models.Progress.AssessmentAnswerTable import AssessmentAnswerTable
     from Models.College_Tables.College import CollegeTable
     from Models.Branch_Tables.Branch import BranchTable
+    from Models.Degree_Tables.Degree import DegreeTable
     
     try:
         # Ensure new tables like AssessmentAnswerTable are created FIRST
         AssessmentAnswerTable.metadata.create_all(bind=engine)
         CollegeTable.metadata.create_all(bind=engine)
         BranchTable.metadata.create_all(bind=engine)
+        DegreeTable.metadata.create_all(bind=engine)
         print("Database tables sync completed successfully on startup.")
     except Exception as e:
         print(f"Database tables sync failed: {str(e)}")

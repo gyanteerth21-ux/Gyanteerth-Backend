@@ -16,6 +16,7 @@ class UpdateUserProfileRequest(BaseModel):
     user_state: str
     user_college: str
     user_branch: str
+    user_degree: str
     user_year: str
 
     @field_validator("user_name")
@@ -51,6 +52,7 @@ class UserProfile_response(BaseModel):
     user_state: Optional[str] = None
     user_college: Optional[str] = None
     user_branch: Optional[str] = None
+    user_degree: Optional[str] = None
     user_year: Optional[str] = None
     email_verified: Optional[bool] = None
 
@@ -68,6 +70,7 @@ class UserProfile_response(BaseModel):
                 "user_state": "NY",
                 "user_college": "ABC College",
                 "user_branch": "Computer Science",
+                "user_degree": "B.Tech",
                 "user_year": "3rd Year",
                 "email_verified": True
             }
@@ -85,6 +88,7 @@ class update_profile_response(BaseModel):
     user_state:str
     user_college:str | None
     user_branch:str | None
+    user_degree:str | None
     user_year:str | None
     cloud_upload_time: float | None = None
     cloud_delete_time: float | None = None
@@ -103,6 +107,7 @@ class update_profile_response(BaseModel):
                 "user_state": "NY",
                 "user_college": "ABC College",
                 "user_branch": "Computer Science",
+                "user_degree": "B.Tech",
                 "user_year": "3rd Year",
                 "cloud_upload_time": 0.5,
                 "cloud_delete_time": 0.3

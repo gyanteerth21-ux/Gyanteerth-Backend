@@ -50,6 +50,8 @@ from Models.Feedback_col.Queries import QueriesTable
 
 from Models.Certificate_Table.Certificate_table import CertificateTable
 
+from Models.Branch_Tables.Branch import BranchTable
+from Models.Degree_Tables.Degree import DegreeTable
 
 # Alembic Config
 config = context.config

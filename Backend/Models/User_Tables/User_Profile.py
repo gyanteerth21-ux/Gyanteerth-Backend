@@ -18,6 +18,7 @@ class user_profile_table(Base):
     user_state = Column(String(100), nullable=True)
     user_college = Column(String(150), nullable=True)
     user_branch = Column(String(50), nullable=True)
+    user_degree = Column(String(50), nullable=True)
     user_year = Column(String(20), nullable=True)
     Status = Column(String(30),nullable=True)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
