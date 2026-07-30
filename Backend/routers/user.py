@@ -32,6 +32,7 @@ async def update_profile(
     user_city: Annotated[str, Form(..., examples=["New York"])],
     user_state: Annotated[str, Form(..., examples=["NY"])],
     user_college: Annotated[str, Form(..., examples=["ABC College"])],
+    user_degree: Annotated[str, Form(..., examples=["B.Tech"])],
     user_branch: Annotated[str, Form(..., examples=["Computer Science"])],
     user_year: Annotated[str, Form(..., examples=["3rd Year"])],
     user_pic: UploadFile | None = File(None),
@@ -47,6 +48,7 @@ async def update_profile(
             user_city=user_city,
             user_state=user_state,
             user_college=user_college,
+            user_degree=user_degree,
             user_branch=user_branch,
             user_year=user_year
         )
@@ -167,3 +169,8 @@ async def get_all_colleges_api(db: Session = Depends(get_db)):
 @router_user.get("/branches", summary="Get All Branches for Dropdown")
 async def get_all_branches_public_api(db: Session = Depends(get_db)):
     return await UserService().get_all_branches_public(db)
+
+@router_user.get("/degrees", summary="Get All Degrees for Dropdown")
+async def get_all_degrees_public_api(db: Session = Depends(get_db)):
+    from services.AdminService import AdminService
+    return await AdminService().get_all_degrees(db)

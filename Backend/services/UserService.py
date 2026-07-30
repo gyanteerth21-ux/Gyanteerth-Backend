@@ -45,6 +45,7 @@ class UserService:
             "user_state": user.user_state,
             "user_college": user.user_college,
             "user_branch": user.user_branch,
+            "user_degree": user.user_degree,
             "user_year": user.user_year,
             "email_verified": user.user_email_verified
         }
@@ -85,6 +86,7 @@ class UserService:
         user.user_state = Data.user_state
         user.user_college = Data.user_college
         user.user_branch = Data.user_branch
+        user.user_degree = Data.user_degree
         user.user_year = Data.user_year
         user.updated_at = datetime.utcnow()
         db.commit()
@@ -102,6 +104,7 @@ class UserService:
             "user_state": user.user_state,
             "user_college": user.user_college,
             "user_branch": user.user_branch,
+            "user_degree": user.user_degree,
             "user_year": user.user_year,
             "cloud_upload_time": cloud_end - cloud_start,
             "cloud_delete_time":cloud_dend - cloud_dstart
