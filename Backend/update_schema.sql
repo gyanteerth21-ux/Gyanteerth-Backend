@@ -5,3 +5,4 @@ ALTER TABLE course_table ALTER COLUMN course_description TYPE VARCHAR(2000);
 ALTER TABLE course_table ALTER COLUMN skill_set TYPE VARCHAR(1000);
 ALTER TABLE course_table ALTER COLUMN required_knowledge TYPE VARCHAR(1000);
 ALTER TABLE course_table ALTER COLUMN benefits TYPE VARCHAR(1000);
+ALTER TABLE user_profile ADD COLUMN user_degree character varying(50);
