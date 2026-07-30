@@ -2336,11 +2336,18 @@ class AdminService:
                     college_id = None
                     if college_name:
                         from Models.College_Tables.College import CollegeTable
-                        coll_obj = db.query(CollegeTable).filter(CollegeTable.College_Name == college_name).first()
+                        coll_obj = db.query(CollegeTable).filter(CollegeTable.College_Name.ilike(college_name)).first()
                         if coll_obj:
                             college_id = coll_obj.College_ID
                         else:
-                            college_id = str(college_name)
+                            import uuid
+                            college_id = f'COLLEGE-{uuid.uuid4()}'
+                            new_college = CollegeTable(
+                                College_ID=college_id,
+                                College_Name=str(college_name)
+                            )
+                            db.add(new_college)
+                            db.flush()
 
                     user_id = f"USER-{uuid.uuid4()}"
                     
@@ -2545,6 +2552,7 @@ class AdminService:
 
     async def bulk_upload_questions_service(self, assessment_id: str, file: UploadFile, db: Session):
         import pandas as pd
+        import io
         try:
             assessment = db.query(AssessmentTable).filter(
                 AssessmentTable.Assessment_ID == assessment_id
@@ -2553,7 +2561,8 @@ class AdminService:
             if not assessment:
                 raise HTTPException(status_code=404, detail="Assessment not found")
 
-            df = pd.read_excel(file.file)
+            contents = await file.read()
+            df = pd.read_excel(io.BytesIO(contents))
             
             required_cols = ['Question', 'Mark', 'Type', 'Explanation', 
                              'Option 1', 'Is Correct 1', 'Option 2', 'Is Correct 2',
@@ -2928,6 +2937,71 @@ class AdminService:
             db.delete(branch)
             db.commit()
             return {"status": True, "message": "Branch deleted successfully"}
+        except Exception as e:
+            db.rollback()
+            from fastapi import HTTPException
+            if isinstance(e, HTTPException): raise e
+            raise HTTPException(status_code=500, detail=str(e))
+
+    async def get_all_degrees(self, db: Session, token: dict = None):
+        from Models.Degree_Tables.Degree import DegreeTable
+        degrees = db.query(DegreeTable).all()
+        return {"status": True, "data": [{"degree_id": d.degree_id, "degree_name": d.degree_name} for d in degrees]}
+
+    async def create_degree(self, request, db: Session, token: dict):
+        from Models.Degree_Tables.Degree import DegreeTable
+        try:
+            existing = db.query(DegreeTable).filter(DegreeTable.degree_name.ilike(request.Degree_Name)).first()
+            from fastapi import HTTPException
+            if existing:
+                raise HTTPException(status_code=400, detail="Degree already exists")
+                
+            new_degree = DegreeTable(degree_name=request.Degree_Name)
+            db.add(new_degree)
+            db.commit()
+            db.refresh(new_degree)
+            
+            return {"status": True, "message": "Degree created successfully", "data": {"degree_id": new_degree.degree_id, "degree_name": new_degree.degree_name}}
+        except Exception as e:
+            db.rollback()
+            from fastapi import HTTPException
+            if isinstance(e, HTTPException): raise e
+            raise HTTPException(status_code=500, detail=str(e))
+
+    async def update_degree(self, degree_id: str, request, db: Session, token: dict):
+        from Models.Degree_Tables.Degree import DegreeTable
+        try:
+            degree = db.query(DegreeTable).filter(DegreeTable.degree_id == degree_id).first()
+            from fastapi import HTTPException
+            if not degree:
+                raise HTTPException(status_code=404, detail="Degree not found")
+                
+            existing = db.query(DegreeTable).filter(DegreeTable.degree_name.ilike(request.Degree_Name), DegreeTable.degree_id != degree_id).first()
+            if existing:
+                raise HTTPException(status_code=400, detail="Another degree with this name already exists")
+                
+            degree.degree_name = request.Degree_Name
+            db.commit()
+            db.refresh(degree)
+            
+            return {"status": True, "message": "Degree updated successfully"}
+        except Exception as e:
+            db.rollback()
+            from fastapi import HTTPException
+            if isinstance(e, HTTPException): raise e
+            raise HTTPException(status_code=500, detail=str(e))
+
+    async def delete_degree(self, degree_id: str, db: Session, token: dict):
+        from Models.Degree_Tables.Degree import DegreeTable
+        try:
+            degree = db.query(DegreeTable).filter(DegreeTable.degree_id == degree_id).first()
+            from fastapi import HTTPException
+            if not degree:
+                raise HTTPException(status_code=404, detail="Degree not found")
+                
+            db.delete(degree)
+            db.commit()
+            return {"status": True, "message": "Degree deleted successfully"}
         except Exception as e:
             db.rollback()
             from fastapi import HTTPException
