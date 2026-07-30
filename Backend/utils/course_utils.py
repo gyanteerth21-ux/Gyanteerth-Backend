@@ -1,15 +1,15 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from Models.Course_Tables.course_details import CourseTable
-from Models.Course_Tables.course_demo import CourseDemoTable
-from Models.Course_Tables.course_notes import CourseNotesTable
-from Models.Course_Tables.course_module import CourseModuleTable
-from Models.Course_Tables.course_video import CourseVideoTable
-from Models.Course_Tables.course_assignment import AssessmentTable
-from Models.Course_Tables.assignment_questions import QuestionTable
-from Models.Course_Tables.assignment_options import optionTable
-from Models.Course_Tables.LiveCourse import LiveCourseTable
-from Models.Course_Tables.course_rec_video import CourseRecVideoTable
+from Models.Course_Tables.Course_Demo import CourseDemoTable
+from Models.Course_Tables.Course_Note import CourseNotesTable
+from Models.Course_Tables.Course_Module import CourseModuleTable
+from Models.Course_Tables.Course_Prerec_Video import CourseVideoTable
+from Models.Assessment_Tables.Assessment_table import AssessmentTable
+from Models.Assessment_Tables.Question_table import QuestionTable
+from Models.Assessment_Tables.Options_table import optionTable
+from Models.Course_Tables.Live_Course import LiveCourseTable
+from Models.Course_Tables.Recorded_live import CourseRecVideoTable
 from Models.User_Tables.User_Access import user_access_table
 
 def get_active_course_ids(db: Session):
