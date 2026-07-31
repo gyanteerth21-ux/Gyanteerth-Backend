@@ -29,6 +29,8 @@ def get_all_students_progress(db: Session, college_filter: str = None):
             "email": u.user_email,
             "college": getattr(u, "user_college", None),
             "branch": getattr(u, "user_branch", None),
+            "degree": getattr(u, "user_degree", None),
+            "user_number": getattr(u, "user_number", None),
             "year": getattr(u, "user_year", None),
             "enrollments": [],
             "avgProgress": 0,
