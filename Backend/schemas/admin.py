@@ -946,8 +946,10 @@ class AdminStudentDetail(BaseModel):
     user_id: str
     name: Optional[str]
     email: str
+    user_number: Optional[int]
     college: Optional[str]
     branch: Optional[str]
+    degree: Optional[str]
     year: Optional[str]
     enrollments: List[AdminStudentEnrollmentDetail] = []
     avgProgress: int = 0
@@ -991,7 +993,8 @@ class TpoRequest(BaseModel):
             raise ValueError("Phone number must be exactly 10 digits")
         return value
     
-    _validate_password = field_validator("tpo_pass")(validate_password)class CreateBranchRequest(BaseModel):
+    _validate_password = field_validator("tpo_pass")(validate_password)
+class CreateBranchRequest(BaseModel):
     Branch_Name: str
 
 class UpdateBranchRequest(BaseModel):
