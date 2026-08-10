@@ -2,9 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, String, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from dotenv import load_dotenv, find_dotenv
-from sqlalchemy.engine import Engine
-from sqlalchemy.pool import NullPool
-import time
+from sqlalchemy.pool import QueuePool
 import os
 
 # Automatically find the .env file in parent directories
@@ -21,7 +19,9 @@ if not db_url:
 DB_URL = db_url
 engine = create_engine(
     DB_URL,
-    poolclass=NullPool,           # REQUIRED for Vercel serverless — no persistent connections
+    poolclass=QueuePool,
+    pool_size=10,
+    max_overflow=20,
     connect_args={
         "connect_timeout": 10,    # fail fast instead of hanging
         "gssencmode": "disable",  # prevents IPv6/GSSAPI negotiation that fails on Vercel
@@ -36,15 +36,3 @@ def get_db():
         yield db
     finally:
         db.close()
-
-query_times = []
-
-@event.listens_for(Engine, "before_cursor_execute")
-def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
-    context._query_start_time = time.time()
-
-
-@event.listens_for(Engine, "after_cursor_execute")
-def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
-    total = time.time() - context._query_start_time
-    query_times.append(total)

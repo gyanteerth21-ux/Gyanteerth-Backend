@@ -18,7 +18,7 @@ from routers.Admin import router_admin
 from routers.Trainer import router_trainer
 from routers.Tpo import router_tpo
 import time
-from Database.DB import query_times
+import os
 
 app = FastAPI()
 
@@ -59,7 +59,7 @@ def startup_db_sync():
     except Exception as e:
         print(f"ALTER TABLE skipped/failed: {str(e)}")
 
-app.add_middleware(SessionMiddleware, secret_key="your_super_secret_key_here")
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET", "fallback-secret-for-dev"))
 # Read allowed origins from environment
 env_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
 origins = [
@@ -102,14 +102,8 @@ async def add_process_time_header(request, call_next):
     response = await call_next(request)
 
     api_time = time.time() - start_time
-    db_time = sum(query_times)
-    query_count = len(query_times)
 
     response.headers["X-API-Time"] = str(round(api_time, 5))
-    response.headers["X-DB-Time"] = str(round(db_time, 5))
-    response.headers["X-Query-Count"] = str(query_count)
-
-    query_times.clear()
 
     return response
 
