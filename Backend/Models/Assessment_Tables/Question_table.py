@@ -8,7 +8,7 @@ class QuestionTable(Base):
 
     Question_ID = Column(String(50),primary_key=True,nullable=False)
     Assessment_ID = Column(String(50),ForeignKey("course_assessment_table.Assessment_ID",ondelete="CASCADE"),nullable=False,index=True)
-    Question_Txt = Column(String(500), nullable=False)
+    Question_Txt = Column(String(5000), nullable=False)
     Mark = Column(Integer,nullable=False)
     Question_Type = Column(String(100),nullable=False)
     Explanation = Column(String(500),nullable=False)
