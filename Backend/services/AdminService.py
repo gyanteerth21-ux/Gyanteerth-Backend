@@ -2878,6 +2878,48 @@ class AdminService:
                 status_code=500,
                 detail=f"An error occurred while creating the TPO profile: {str(e)}"
             )
+
+    async def delete_tpo(self, tpo_id: str, db: Session, token: dict = None):
+        try:
+            # Check if tpo exists in user_access or user_profile
+            access = db.query(user_access_table).filter(
+                user_access_table.user_id == tpo_id,
+                user_access_table.role == "tpo"
+            ).first()
+
+            tpo_profile = db.query(user_profile_table).filter(user_profile_table.user_id == tpo_id).first()
+
+            if not access and not tpo_profile:
+                raise HTTPException(status_code=404, detail="TPO not found")
+
+            # Revoke all refresh tokens for this user
+            db.query(user_refresh_token_table).filter(user_refresh_token_table.user_id == tpo_id).delete()
+
+            # Revoke TPO role access
+            db.query(user_access_table).filter(
+                user_access_table.user_id == tpo_id,
+                user_access_table.role == "tpo"
+            ).delete()
+
+            # If user has no other roles, clean up any OTP records and user profile
+            remaining_access = db.query(user_access_table).filter(user_access_table.user_id == tpo_id).first()
+            if not remaining_access:
+                try:
+                    from Models.User_Tables.User_OTP import user_otp_table
+                    db.query(user_otp_table).filter(user_otp_table.user_id == tpo_id).delete()
+                except Exception:
+                    pass
+                db.query(user_profile_table).filter(user_profile_table.user_id == tpo_id).delete()
+
+            db.commit()
+            return {"status": True, "message": "TPO access revoked successfully"}
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            db.rollback()
+            print(f"Error revoking TPO: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to revoke TPO access: {str(e)}")
+
     async def get_all_branches(self, db: Session, token: dict = None):
         from Models.Branch_Tables.Branch import BranchTable
         branches = db.query(BranchTable).all()

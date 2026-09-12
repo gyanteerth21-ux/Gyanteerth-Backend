@@ -675,6 +675,12 @@ async def get_tpos_api(db: Session = Depends(get_db), token: dict = Depends(admi
 @router_admin.post("/tpo", summary="Create TPO")
 async def create_tpo_api(request: TpoRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
     return await AdminService().create_tpo_services(request, background_tasks, token, db)
+
+@router_admin.delete("/tpo/{tpo_id}", summary="Delete / Revoke TPO")
+@router_admin.delete("/tpos/{tpo_id}", summary="Delete / Revoke TPO (alias)")
+async def delete_tpo_api(tpo_id: str, db: Session = Depends(get_db), token: dict = Depends(admin_Authorization())):
+    return await AdminService().delete_tpo(tpo_id, db, token)
+
 from schemas.admin import CreateBranchRequest, UpdateBranchRequest, BranchResponse
 
 @router_admin.get("/branches", summary="Get All Branches")
