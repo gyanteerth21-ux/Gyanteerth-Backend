@@ -10,14 +10,14 @@ class GenderEnum(str, Enum):
 
 class UpdateUserProfileRequest(BaseModel):
     user_name: str 
-    user_number: int
-    user_dob: date
-    user_city: str
-    user_state: str
-    user_college: str
-    user_branch: str
-    user_degree: str
-    user_year: str
+    user_number: int | None = None
+    user_dob: date | None = None
+    user_city: str | None = None
+    user_state: str | None = None
+    user_college: str | None = None
+    user_branch: str | None = None
+    user_degree: str | None = None
+    user_year: str | None = None
 
     @field_validator("user_name")
     @classmethod
@@ -29,7 +29,9 @@ class UpdateUserProfileRequest(BaseModel):
     
     @field_validator("user_number")
     @classmethod
-    def validate_phone(cls, value: int):
+    def validate_phone(cls, value: int | None):
+        if value is None:
+            return value
         if not isinstance(value, int):
             raise ValueError("Phone number must be an integer")
         if len(str(value)) != 10:
@@ -81,11 +83,11 @@ class update_profile_response(BaseModel):
     email:str
     user_name:str
     user_pic:str | None
-    user_number:str
-    user_dob:date
-    user_gender:GenderEnum
-    user_city:str
-    user_state:str
+    user_number: str | None = None
+    user_dob: date | None = None
+    user_gender: GenderEnum | None = None
+    user_city: str | None = None
+    user_state: str | None = None
     user_college:str | None
     user_branch:str | None
     user_degree:str | None
