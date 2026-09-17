@@ -88,10 +88,10 @@ class update_profile_response(BaseModel):
     user_gender: GenderEnum | None = None
     user_city: str | None = None
     user_state: str | None = None
-    user_college:str | None
-    user_branch:str | None
-    user_degree:str | None
-    user_year:str | None
+    user_college: str | None = None
+    user_branch: str | None = None
+    user_degree: str | None = None
+    user_year: str | None = None
     cloud_upload_time: float | None = None
     cloud_delete_time: float | None = None
     class Config:
